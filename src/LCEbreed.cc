@@ -421,7 +421,7 @@ void LCE_Breed::execute()
 {
   Patch* patch;
   Individual* mother;
-  Individual* father;
+  Individual* father;  // make a father variable of class "individual"
   Individual* NewOffsprg;
   unsigned int nbBaby;
 #ifdef _DEBUG_
@@ -434,13 +434,48 @@ void LCE_Breed::execute()
     _popPtr->flush(OFFSx);
   }
   //because mean fecundity can be patch-specific, we have to check whether the patch number changed
-  if (_mean_fecundity->getNbCols() != _popPtr->getPatchNbr()) LCE_Breed_base::setFecundity();
+  if (_mean_fecundity->getNbCols() != _popPtr->getPatchNbr()) LCE_Breed_base::setFecundity(); // find the mother's patch's fecundity
   
-  for(unsigned int i = 0; i < _popPtr->getPatchNbr(); i++) {
+  for(unsigned int i = 0; i < _popPtr->getPatchNbr(); i++) { // which patch are we in
     
-    patch = _popPtr->getPatch(i);
+    patch = _popPtr->getPatch(i);  // set 'patch' to the current patch we're doing breeding for
     
-    if( !checkMatingCondition(patch) ) continue;
+cout << patch;  // what values ID a patch? - seem to be locations in memory
+cout << "," << i << " ";  // can actually use i as it indexes through the list of patches
+ 
+    if( !checkMatingCondition(patch) ) continue; // give the focal patch to the mating condition function
+    	// if no males, exit loop and continue through code
+		// this calls "checkNoSelfing" function in line 93 of this file which is defined in LCEbreed.h
+		//	checkNoSelfing returns true if it counts >0 females and >0 males in a patch 	
+  
+/******  MY EDITED VERSION
+// ******************************
+    if( !checkMatingCondition(patch) ){
+    // if no one in the focal patch, find a nearby male to mate with
+    
+    // find a nearby patch that has a male
+    
+    // look in patches in this order, from input file
+    
+    //first patch you find with >0 males becomes patch_father
+
+    patch_father = 
+    
+    getBreedingWindowPatchNbr(patch);   
+    // make this function in the header file, should take an input array of potential patches for breeding
+    // once finds a patch with males, breeding takes place
+    
+breedNearby needs to return the patch where the male is going to come from, female is going to come from the current patch
+so return some parameter, patch_father and place it in the code below:
+	father = this->getFatherPtr(patch_father, mother, indexOfMother) // BUT NEED TO BE CAREFUL HERE, will there be problems if it calls a mother based on the current patch in this function when I am calling a father from a different patch?
+    // should actually be okay, see header file where random mating is defined, doesn't use mother or mother index anywhere within the function, just set as input to match other mating options
+    
+    }else{
+    continue;
+    }
+
+// ******************************
+*/
     
     unsigned int cnt =0;
     for(unsigned int size = patch->size(FEM, ADLTx), indexOfMother = 0;
