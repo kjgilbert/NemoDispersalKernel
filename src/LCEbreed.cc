@@ -421,7 +421,7 @@ void LCE_Breed::execute()
 {
   Patch* patch;
   Individual* mother;
-  Individual* father;
+  Individual* father;  // make a father variable of class "individual"
   Individual* NewOffsprg;
   unsigned int nbBaby;
 #ifdef _DEBUG_
@@ -434,36 +434,74 @@ void LCE_Breed::execute()
     _popPtr->flush(OFFSx);
   }
   //because mean fecundity can be patch-specific, we have to check whether the patch number changed
-  if (_mean_fecundity->getNbCols() != _popPtr->getPatchNbr()) LCE_Breed_base::setFecundity();
+  if (_mean_fecundity->getNbCols() != _popPtr->getPatchNbr()) LCE_Breed_base::setFecundity();  // find the mother's patch's fecundity
   
-  for(unsigned int i = 0; i < _popPtr->getPatchNbr(); i++) {
+  for(unsigned int i = 0; i < _popPtr->getPatchNbr(); i++) { // which patch are we in
     
-    patch = _popPtr->getPatch(i);
-   
-//cout << patch;  // what values ID a patch?
-//cout << "," << i << " ";  // can actually use i as it indexes through the list of patches
+    patch = _popPtr->getPatch(i); // set 'patch' to the current patch we're doing breeding for
+  
+cout << patch;  // what values ID a patch?
+cout << "," << i << " ";  // can actually use i as it indexes through the list of patches
  
-    if( !checkMatingCondition(patch) ) continue;
+    if( !checkMatingCondition(patch) ) continue; // give the focal patch to the mating condition function
+    	// if no males, exit loop and continue through code
+		// this calls "checkNoSelfing" function in line 93 of this file which is defined in LCEbreed.h
+		//	checkNoSelfing returns true if it counts >0 females and >0 males in a patch 	
     
-    unsigned int cnt =0;
-    for(unsigned int size = patch->size(FEM, ADLTx), indexOfMother = 0;
+    	
+/******  MY EDITED VERSION
+// ******************************
+    if( !checkMatingCondition(patch) ){
+    // if no one in the focal patch, find a nearby male to mate with
+    
+    // find a nearby patch that has a male
+    
+    // look in patches in this order, from input file
+    
+    //first patch you find with >0 males becomes patch_father
+
+    patch_father = 
+    
+    getBreedingWindowPatchNbr(patch);   
+    // make this function in the header file, should take an input array of potential patches for breeding
+    // once finds a patch with males, breeding takes place
+    
+breedNearby needs to return the patch where the male is going to come from, female is going to come from the current patch
+so return some parameter, patch_father and place it in the code below:
+	father = this->getFatherPtr(patch_father, mother, indexOfMother) // BUT NEED TO BE CAREFUL HERE, will there be problems if it calls a mother based on the current patch in this function when I am calling a father from a different patch?
+    // should actually be okay, see header file where random mating is defined, doesn't use mother or mother index anywhere within the function, just set as input to match other mating options
+    
+    }else{
+    continue;
+    }
+
+// ******************************
+*/
+
+    
+    unsigned int cnt =0;  // set count equal to zero
+    for(unsigned int size = patch->size(FEM, ADLTx), indexOfMother = 0; // the arrow means the member of a thing being pointed at; see: http://stackoverflow.com/questions/4113365/what-does-mean-in-c
+        // so in the line above, I think we are finding the number of females in the patch, and starting to index it at zero, iterate, and continue until all females have been mated
         indexOfMother < size;
         indexOfMother++)
     {
-      mother = patch->get(FEM, ADLTx, indexOfMother);
+      mother = patch->get(FEM, ADLTx, indexOfMother); // get the details for the female currently being indexed?
       
+      // how many offspring is that mother going to make based on her fecundity?
       nbBaby = (unsigned int)mother->setFecundity( getFecundity(i) ) ; //allows for patch-specific fec
       cnt += nbBaby;
       //-----------------------------------------------------------------------
       while(nbBaby != 0) {
+        // if she makes more than zero babies, find a father
         
-        father = this->getFatherPtr(patch, mother, indexOfMother);
+        father = this->getFatherPtr(patch, mother, indexOfMother); // in this instance of making an offspring, run getFatherPointer with provided variables
+        // calls getFatherPtr which is defined in LCEbreed.h
         
-        NewOffsprg = makeOffspring( do_breed(mother, father, i) );
+        NewOffsprg = makeOffspring( do_breed(mother, father, i) );  // make the offspring now that we have the father and the mother
         
-        patch->add(NewOffsprg->getSex(), OFFSx, NewOffsprg);
+        patch->add(NewOffsprg->getSex(), OFFSx, NewOffsprg); // give the offspring a sex
         
-        nbBaby--;
+        nbBaby--;  // from the total number of offspring that mother can make, decrement by 1 since that's one we just made
       }//_END__WHILE
       
     }

@@ -10,5 +10,6 @@ bin/*
 
 # track files I am making modifications to
 !src/LCEbreed.cc
+!src/LCEbreed.h
 !Readme.md
 !.gitignore
