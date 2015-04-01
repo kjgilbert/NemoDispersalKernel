@@ -11,5 +11,7 @@ bin/*
 # track files I am making modifications to
 !src/LCEbreed.cc
 !src/LCEbreed.h
+!src/ttdeletmutations_bitstring.cc
+
 !Readme.md
 !.gitignore

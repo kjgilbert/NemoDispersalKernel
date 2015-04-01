@@ -440,7 +440,7 @@ void LCE_Breed::execute()
     
     patch = _popPtr->getPatch(i); // set 'patch' to the current patch we're doing breeding for
   
-cout << patch;  // what values ID a patch?
+cout << patch;  // what values ID a patch? - seem to be locations in memory
 cout << "," << i << " ";  // can actually use i as it indexes through the list of patches
  
     if( !checkMatingCondition(patch) ) continue; // give the focal patch to the mating condition function
