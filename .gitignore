@@ -1,9 +1,14 @@
 # ignore all files I have not modified
-*
+src/*
+CHANGELOG.txt
+example/*
+Makefile
+Nemo2-manual.pdf
+VERSION
+bin/*
+
 
 # track files I am making modifications to
-!src/*
 !src/LCEbreed.cc
-src/*
 !Readme.md
 !.gitignore
