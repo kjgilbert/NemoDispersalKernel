@@ -6,6 +6,10 @@ Makefile
 Nemo2-manual.pdf
 VERSION
 bin/*
+edited_src/*
+INSTALL
+Inputs/*
+nemo2.3.38.tgz
 
 
 # track files I am making modifications to
