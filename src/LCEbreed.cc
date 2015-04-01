@@ -439,7 +439,10 @@ void LCE_Breed::execute()
   for(unsigned int i = 0; i < _popPtr->getPatchNbr(); i++) {
     
     patch = _popPtr->getPatch(i);
-    
+   
+//cout << patch;  // what values ID a patch?
+//cout << "," << i << " ";  // can actually use i as it indexes through the list of patches
+ 
     if( !checkMatingCondition(patch) ) continue;
     
     unsigned int cnt =0;
