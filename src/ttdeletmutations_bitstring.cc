@@ -223,20 +223,20 @@ void TProtoDeletMutations_bitstring::set_effects()
   
   for(unsigned int i = 0; i < _nb_locus; ++i){
     
-    if (rand()>0.3){
-      _effects[1][i] = 1
-      _effects[0][i] = 0
+    if (rand()>0.3){ // adding new code - Remi
+      _effects[1][i] = 1;
+      _effects[0][i] = 0;
     } else {
       do{
-        _effects[1][i] = (float)(this->*_set_effects_func)(); //homozygote effect: s
-      }while(_effects[1][i] > 1); //truncate distribution
+        _effects[1][i] = (float)(this->*_set_effects_func)(); //homozygote effect: s  ORIG NEMO
+      }while(_effects[1][i] > 1); //truncate distribution		ORIG NEMO
       
-      if(_dominance_model == 1)
-        dom = exp(-1.0*_effects[1][i]*k)/2.0; //scaling of h on s
-      else dom = _dominance;
+      if(_dominance_model == 1)	// ORIG NEMO
+        dom = exp(-1.0*_effects[1][i]*k)/2.0; //scaling of h on s    ORIG NEMO
+      else dom = _dominance;	// ORIG NEMO
       
       _effects[0][i] = (float)(dom * _effects[1][i]); //heterozygote effect: hs
-    }
+    }  // end new code added - this was changing the distribution of adding lethal mutations to if greater than 0.3, adds a lethal,  REMEMBER that at each del. locus there is a set size mutation for the whole course of the simulation
   }
   //set the TTDeletMutations global var:
   TTDeletMutations_bitstring::set_effects(_effects);
