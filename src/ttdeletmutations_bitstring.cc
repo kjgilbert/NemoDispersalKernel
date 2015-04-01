@@ -575,7 +575,7 @@ void TTDeletMutations_bitstring::init_sequence ()
       do {
         locus = RAND::Uniform( _nb_locus );
         //check if the locus is not already homozygote:
-      } while( (*sequence[0])[ locus ] && (*sequence[1])[ locus ] );
+      } while( (*sequence[0])[ locus ] || (*sequence[1])[ locus ] ); // changed this line, I think && was a bug, same as line 617
       
       if((*sequence[0])[ locus ])
         sequence[1]->set(locus);
@@ -614,7 +614,7 @@ void TTDeletMutations_bitstring::mutate_redraw ()
     do { 
       mutLocus = RAND::Uniform( _nb_locus );
       //check if the locus is not already homozygote:
-    } while( (*sequence[0])[mutLocus] && (*sequence[1])[mutLocus] );
+    } while( (*sequence[0])[mutLocus] || (*sequence[1])[mutLocus] ); // Fred said this && was indeed a bug
     
     if ( !( (*sequence[0])[mutLocus] && (*sequence[1])[mutLocus] ) )
       sequence[RAND::RandBool()]->set(mutLocus);
