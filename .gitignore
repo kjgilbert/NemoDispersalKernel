@@ -1,0 +1,7 @@
+# ignore all files I have not modified
+*
+
+# track files I am making modifications to
+!src/LCEbreed.cc
+!Readme.md
+!.gitignore
