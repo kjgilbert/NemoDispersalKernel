@@ -2,6 +2,8 @@
 *
 
 # track files I am making modifications to
+!src/*
 !src/LCEbreed.cc
+src/*
 !Readme.md
 !.gitignore
