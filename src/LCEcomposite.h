@@ -46,11 +46,16 @@ class LCE_Breed_Disperse : public virtual LCE_Breed_base, public virtual LCE_Dis
 {
   void (LCE_Breed_Disperse::* _breed_disperse)();
   
+  /**Maximum size of a patch after colonisation.*/
   int _num_colonizers;
+  
+  /**Which part of the population is dispersing its gametes.*/
   sex_t _dispersing_sex;
+
+  /**Patch-specific growth rates.*/
   double *_growthRates;
     
-protected:
+protected: //so that the derived class can use these function pointers
   Individual*  (LCE_Breed_Disperse::* _make_offspring)(sex_t SEX, Patch* patch, unsigned int LocalPatch);
   unsigned int (LCE_Breed_Disperse::* _get_numFemOffspring)(Patch* patch);
   unsigned int (LCE_Breed_Disperse::* _get_numMalOffspring)(Patch* patch);
@@ -73,40 +78,56 @@ public:
     else
       return (this->*_get_patchFecundity)(patch, FEM);
   }
-    
+  
+  /**The number of females produced in case a max number of colonizers was specified.*/
   unsigned int numFemOffspring_colonizers   (Patch *patch)
   {
-    if(patch->get_isExtinct())
-      return _num_colonizers; 
-    else
+    if(patch->get_isExtinct()) {
+      //check if only one sex sends gametes around, capturing the case of pollen dispersal
+      if(_dispersing_sex != FEM)
+        return 0;
+      else
+        return _num_colonizers; 
+    } else
       return (this->*_get_patchFecundity)(patch, FEM);
   }
 
+  /**The number of males produced is always zero when the mating system is not random mating.*/
   unsigned int numMalOffspring_notrandom     (Patch *patch)
   {
     return 0;
   }
   
   unsigned int numMalOffspring_random        (Patch *patch)
-  {
-    return (this->*_get_patchFecundity)(patch, MAL);
+  { //return 0 if only males gametes migrate and there is no females in the patch
+    //to avoid choosing a local female when there is none
+    //(we assume it doesn't make sense to have only female gametes migrating)
+    if (patch->size(FEM, ADLTx) == 0 && _dispersing_sex != FEM)
+      return 0;
+    else
+      return (this->*_get_patchFecundity)(patch, MAL);
   }
   
   unsigned int numMalOffspring_random_colonizers (Patch *patch)
   {
-    if(patch->get_isExtinct())
-      return _num_colonizers;
-    else
+    if(patch->get_isExtinct()) {
+      //check if only one sex sends gametes around, capturing the case of pollen dispersal
+      if(_dispersing_sex != FEM)
+        return 0;
+      else
+        return _num_colonizers; 
+    } else
       return (this->*_get_patchFecundity)(patch, MAL);
   }
   
   ///@name Growth Functions
   ///@{
+  /**The number of offspring produced corresponds to the carrying capacity of the patch.*/
   unsigned int instantGrowth  (Patch* patch, sex_t SEX)
   {
     return patch->get_K(SEX);
   }
-  
+  /**The number of offspring produced is given by the logistic growth function.*/
   unsigned int logisticGrowth (Patch* patch, sex_t SEX) 
   {
     double K = (double)patch->get_K(SEX);
@@ -114,12 +135,13 @@ public:
     double N = (double)patch->size(ADLTx);
     return (unsigned int)ceil(N + r*N*((K-N)/K));
   }
-  
+  /**The number of offspring produced is drawn from a Poisson with mean equal to the logistic growth predicate.*/
   unsigned int stochasticLogisticGrowth (Patch* patch, sex_t SEX) 
   {
     return (unsigned int)RAND::Poisson((double)logisticGrowth(patch, SEX));
   }
-  
+  /**The number of offspring produced depends on the adult density. A minimum number of offspring is
+     produced when less than half of the carrying capacity of adults is present. It is logistic otherwise.*/
   unsigned int conditionalLogisticGrowth (Patch* patch, sex_t SEX)
   {
     if (patch->size(SEX, ADLTx) < patch->get_K(SEX)/2) {
@@ -128,7 +150,8 @@ public:
       return logisticGrowth(patch, SEX);
     }
   }
-  
+  /**The number of offspring produced depends on the adult density, similar to 'conditionalLogisticGrowth'
+      except that this time, the fecundities are drawn from Poisson distributions.*/
   unsigned int conditionalStochasticLogisticGrowth (Patch* patch, sex_t SEX)
   {
     if (patch->size(SEX, ADLTx) < patch->get_K(SEX)/2) {
@@ -137,12 +160,14 @@ public:
       return stochasticLogisticGrowth(patch, SEX);
     }
   }
-  
+  /**The number of offspring produced is equal to the carrying capacity multiplied by the mean fecundity
+     of the focal patch.*/
   unsigned int fixedFecundityGrowth (Patch* patch, sex_t SEX)
   {
     return patch->get_K(SEX)*LCE_Breed_base::getMeanFecundity(patch->getID());
   }
-  
+  /**The number of offspring produced is a random number drawn from a Poisson distribution with mean
+   equal to the carrying capacity multiplied by the mean fecundity of the focal patch.*/
   unsigned int stochasticFecundityGrowth (Patch* patch, sex_t SEX)
   {
     return RAND::Uniform(patch->get_K(SEX)*LCE_Breed_base::getMeanFecundity(patch->getID()));

@@ -62,6 +62,7 @@ bool LCE_Breed_Disperse::setParameters ()
   
   _num_colonizers = (int)get_parameter_value("breed_disperse_colonizers");
   
+  //some default settings, reset below depending on mating system
   _get_numFemOffspring = (_num_colonizers == -1 ?
                           &LCE_Breed_Disperse::numFemOffspring : 
                           &LCE_Breed_Disperse::numFemOffspring_colonizers);
@@ -85,26 +86,37 @@ bool LCE_Breed_Disperse::setParameters ()
   unsigned int model = this->getMatingSystem();
   
   if(model == 2 || model == 3) {
-    error("Polygyny and Monogamy are not implemented within the breed_disperse LCE.\n");
-    return false;
-  } else if(model == 1) {
+  
+    return error("Polygyny and Monogamy are not implemented within the breed_disperse LCE.\n");
+
+  } else if(model == 1) { //promiscuity/random mating
+    
     _make_offspring = &LCE_Breed_Disperse::mate_random;
+    
     _get_numMalOffspring = (_num_colonizers == -1 ?
                             &LCE_Breed_Disperse::numMalOffspring_random : 
                             &LCE_Breed_Disperse::numMalOffspring_random_colonizers);
-  } else if(model == 4)
+    
+  } else if(model == 4) { //selfing
+    
     if(this->getMatingProportion() != 1)
       _make_offspring = &LCE_Breed_Disperse::mate_selfing;
     else
       _make_offspring = &LCE_Breed_Disperse::mate_full_selfing;
-    else if(model == 5)
-      _make_offspring = &LCE_Breed_Disperse::mate_cloning;
-    else if(model == 6)
-      _make_offspring = &LCE_Breed_Disperse::mate_random_hermaphrodite;
+  
+  } else if(model == 5) { //cloning
+  
+    _make_offspring = &LCE_Breed_Disperse::mate_cloning;
+  
+  } else if(model == 6) { //random mating among hermaphrodites (selfing = 1/N)
+   
+    _make_offspring = &LCE_Breed_Disperse::mate_random_hermaphrodite;
+  }
   
   //check dispersal model:
   model = this->getDispersalModel();
-  if(model == 2)
+  
+  if(model == 2) //propagule-pool island model
     _breed_disperse = &LCE_Breed_Disperse::do_breed_disperse_propagule;
   else
     _breed_disperse = &LCE_Breed_Disperse::do_breed_disperse;
@@ -146,8 +158,9 @@ bool LCE_Breed_Disperse::setParameters ()
   if (model > 1 && model < 6) {
     
     if(!_paramSet->isSet("breed_disperse_growth_rate")) {
-      error("parameter \"breed_disperse_growth_rate\" needs to be set\n");
-      return false;
+    
+      return error("parameter \"breed_disperse_growth_rate\" needs to be set\n");
+
     }
     
     if(_growthRates) delete [] _growthRates;
@@ -314,17 +327,33 @@ Individual* LCE_Breed_Disperse::mate_cloning(sex_t SEX, Patch *patch, unsigned i
 Individual* LCE_Breed_Disperse::get_parent(sex_t SEX, sex_t DispSex, Patch *local_patch,
                                            unsigned int LocalPatch)
 {
-  unsigned int SourcePatch;
+  unsigned int SourcePatch = 0;
   Patch* src_patch;
+  
 //    cout << "  getting "<<(DispSex==1?"female":"male")<<" gamete to "<<LocalPatch<<flush;
+  
+  //this algorithm does not check for the availability of migrants in connected patches
+  //it may thus hang if all connected patches are empty
+  //one work around is to impose a maximum number of trials before it abandons the search
+
+  //>>>> uncomment the following:
+  //unsigned int trials = 0;
   do {
     
     SourcePatch = LCE_Disperse_base::getMigrationPatchBackward(DispSex, LocalPatch);
     src_patch = _popPtr->getPatchPtr(SourcePatch);
     
+    
   } while (src_patch->size( SEX, ADLTx ) == 0); //redraw if source patch is empty
+  
+  //>>>> uncomment the following line and comment out the previous one:
+  //} while (src_patch->size( SEX, ADLTx ) == 0 && trials < 500); 
+  
+  //@Kim: you can play with the maximum num of trials set above to 500 to see how it works
+  
 //    cout << " from "<<SourcePatch<<endl;
   
+  //set migrant counters for the stats
   if(LocalPatch != SourcePatch) {
     src_patch->nbEmigrant++;
     
@@ -336,6 +365,7 @@ Individual* LCE_Breed_Disperse::get_parent(sex_t SEX, sex_t DispSex, Patch *loca
   } else
     src_patch->nbPhilopat++;
   
+  //return a pointer to an individual randomly choosen from the source patch:
   return src_patch->get(SEX, ADLTx, RAND::Uniform( src_patch->size( SEX, ADLTx ) ) );
 }
 // ------------------------------------------------------------------------------
