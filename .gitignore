@@ -11,6 +11,7 @@ INSTALL
 Inputs/*
 nemo2.3.38.tgz
 .DS_Store
+src_PreBreedingWindow.zip
 
 # track files I am making modifications to
 !src/LCEbreed.cc
