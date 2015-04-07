@@ -943,7 +943,7 @@ bool LCE_Disperse_base::setLatticeAbsorbingMatrix()
  connected. The connected patches are further ordered in descending order of the migration rates.
  This offers a double speed-up compared to the classical method.
 */
-bool LCE_Disperse_base::setReducedDispMatrix()
+bool LCE_Disperse_base::setReducedDispMatrix() /// CAN USE THIS FOR DISP KERNEL MODIFICATIONS I'LL BE MAKING
 {
   unsigned int border_model = (unsigned int)get_parameter_value(_prefix + "_border_model");
   unsigned int num_patch = (border_model == 3 ? _npatch + 1 : _npatch);
