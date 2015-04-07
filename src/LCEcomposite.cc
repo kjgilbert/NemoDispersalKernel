@@ -337,17 +337,17 @@ Individual* LCE_Breed_Disperse::get_parent(sex_t SEX, sex_t DispSex, Patch *loca
   //one work around is to impose a maximum number of trials before it abandons the search
 
   //>>>> uncomment the following:
-  //unsigned int trials = 0;
+  unsigned int trials = 0;
   do {
     
     SourcePatch = LCE_Disperse_base::getMigrationPatchBackward(DispSex, LocalPatch);
     src_patch = _popPtr->getPatchPtr(SourcePatch);
     
     
-  } while (src_patch->size( SEX, ADLTx ) == 0); //redraw if source patch is empty
+  //} while (src_patch->size( SEX, ADLTx ) == 0); //redraw if source patch is empty
   
   //>>>> uncomment the following line and comment out the previous one:
-  //} while (src_patch->size( SEX, ADLTx ) == 0 && trials < 500); 
+  } while (src_patch->size( SEX, ADLTx ) == 0 && trials < 500); // CHANGE THIS NUMBER to check more or fewer patches, this will likely affect speed when I've got lots of empty patches 
   
   //@Kim: you can play with the maximum num of trials set above to 500 to see how it works
   
