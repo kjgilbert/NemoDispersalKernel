@@ -96,7 +96,7 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
     }
   }
   
-  if(_paramSet->isSet(prefix + "_matrix")) {
+  if(_paramSet->isSet(prefix + "_matrix")) { // set normal dispersal matrix here
     
     _DispMatrix[0] = new TMatrix();
     
@@ -123,6 +123,38 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
     
     }
   }
+  
+/*
+a way to pass the reduced dispersal matrices directly instead of building them from the 
+input non-reduced dispersal matrices (this last case is done in 
+LCE_Disperse_base::setReducedDispMatrix(), line 946 in LCEdisperse.cc)
+
+The basic idea, though, is to pass one matrix which holds the IDs of the patches connected 
+to each patch in the population and a second which holds the dispersal probabilities to 
+those connected patches. The first matrix would be copied into _reducedDispMat (member of 
+LCE_Disperse_base), the second would be copied into a new _DispMatrix which would allow 
+having rows of different sizes, just like the _reducedDispMat 
+(i.e. of type vector< vector< double > > instead of TMatrix). This would be done in 
+LCE_Disperse_base::setReducedDispMatrix() and you would need to add a parameter to pass 
+the matrix of connected patches.
+*/
+/*
+  if(_paramSet->isSet(prefix + "_matrix_reduced")) { // set new modified, reduced dispersal matrix here
+    
+    _DispMatrix[0] = new TMatrix(); // want this to change to what Fred has described, this is original unchanged line
+    _DispMatrix[0] = new vector< vector< double > >; // incomplete new line
+    
+    
+    _paramSet->getMatrix(prefix + "_matrix_reduced",_DispMatrix[0]);
+    
+    //same dispersal matrix for males and females
+    _DispMatrix[1] = new TMatrix(*_DispMatrix[0]); // need to edit it here too
+    
+    
+    
+    
+  }
+*/
   
   if( _paramSet->isSet(prefix + "_matrix") || 
      ( _paramSet->isSet(prefix + "_matrix_fem") && _paramSet->isSet(prefix + "_matrix_mal") )  )
