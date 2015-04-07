@@ -19,6 +19,9 @@ src_PreBreedingWindow.zip
 !src/ttdeletmutations_bitstring.cc
 !src/LCEcomposite.cc
 !src/LCEcomposite.h
+!src/LCEdisperse.h
+!src/LCEdisperse.cc
+
 
 !Readme.md
 !.gitignore
