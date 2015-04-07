@@ -85,7 +85,7 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
   
   _npatch = _popPtr->getPatchNbr();
   
-  _disp_model = (int)_paramSet->getValue(prefix + "_model");
+  _disp_model = (int)_paramSet->getValue(prefix + "_model"); // set dispersal model to 1-4 if a model has been fed in, not a disp. matrix
   
   _disp_propagule_prob = _paramSet->getValue(prefix + "_propagule_prob");
   
@@ -125,7 +125,7 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
   }
   
 /*
-a way to pass the reduced dispersal matrices directly instead of building them from the 
+want a way to pass the reduced dispersal matrices directly instead of building them from the 
 input non-reduced dispersal matrices (this last case is done in 
 LCE_Disperse_base::setReducedDispMatrix(), line 946 in LCEdisperse.cc)
 
@@ -164,7 +164,7 @@ the matrix of connected patches.
        || _paramSet->isSet(prefix + "_model") )
       warning("parameter \"dispersal_matrix\" takes precedence over parameters \"dispersal_rate\" and \"dispersal_model\"\n");
     
-    _disp_model = 0;
+    _disp_model = 0; // if not dispersal models 1-4, set to zero, because a matrix has been fed in from the input
 
     if(_DispMatrix[FEM]) {
 
@@ -176,7 +176,7 @@ the matrix of connected patches.
       if(_isForward) {
         if(!checkForwardDispersalMatrix(_DispMatrix[FEM])) return false;
       } else {
-        if(!checkBackwardDispersalMatrix(_DispMatrix[FEM])) return false;
+        if(!checkBackwardDispersalMatrix(_DispMatrix[FEM])) return false; // check htat these both sum to 1, either across rows for forward or across columns for backwards
       }
       
     }
@@ -195,7 +195,7 @@ the matrix of connected patches.
       }
     }
     
-    setReducedDispMatrix();
+    setReducedDispMatrix(); // calls on setReducedDispMatrix once has read in all matrices so it can order patches for optimal searching rather than searching all despite order of probabilities
     
   } else {
        
@@ -422,7 +422,7 @@ bool LCE_Disperse_base::setDispMatrix ()
     }
   }
   
-  return setReducedDispMatrix();
+  return setReducedDispMatrix(); // also call on reduced disp matrix here if none of the other dispersal models has been set
 }
 // ----------------------------------------------------------------------------------------
 // LCE_Disperse_base::setIsland_MigrantPool_Matrix()  (set the Island dispersal matrix)
@@ -979,8 +979,8 @@ bool LCE_Disperse_base::setLatticeAbsorbingMatrix()
 */
 bool LCE_Disperse_base::setReducedDispMatrix() /// CAN USE THIS FOR DISP KERNEL MODIFICATIONS I'LL BE MAKING
 {
-  unsigned int border_model = (unsigned int)get_parameter_value(_prefix + "_border_model");
-  unsigned int num_patch = (border_model == 3 ? _npatch + 1 : _npatch);
+  unsigned int border_model = (unsigned int)get_parameter_value(_prefix + "_border_model"); // check if there are reflecting or absorbing boundaries set from the input
+  unsigned int num_patch = (border_model == 3 ? _npatch + 1 : _npatch); // SOMEHOW? check on this. this is getting the number of patches from that code?
 
   //multimap automatically orders the key values in ascending order
   multimap<double, unsigned int> ordered_rates_fem, ordered_rates_mal;
@@ -995,7 +995,7 @@ bool LCE_Disperse_base::setReducedDispMatrix() /// CAN USE THIS FOR DISP KERNEL 
     if(_reducedDispMat[sex].size() != 0) _reducedDispMat[sex].clear();
   
   
-  for (unsigned int i = 0; i < num_patch; ++i) {
+  for (unsigned int i = 0; i < num_patch; ++i) { // go through all the patches
     
     _reducedDispMat[0].push_back(vector<unsigned int>());
     _reducedDispMat[1].push_back(vector<unsigned int>());
@@ -1003,17 +1003,17 @@ bool LCE_Disperse_base::setReducedDispMatrix() /// CAN USE THIS FOR DISP KERNEL 
     ordered_rates_fem.clear();
     ordered_rates_mal.clear();
     
-    if(_isForward) {
+    if(_isForward) { // if doing forward migration
       
       for (unsigned int j = 0; j < num_patch; ++j)
         if(_DispMatrix[0]->get(i, j) != 0) ordered_rates_mal.insert(make_pair(_DispMatrix[0]->get(i, j), j));
       
       
-      for (unsigned int j = 0; j < num_patch; ++j)      
+      for (unsigned int j = 0; j < num_patch; ++j)      // go through all the patches
         if(_DispMatrix[1]->get(i, j) != 0) ordered_rates_fem.insert(make_pair(_DispMatrix[1]->get(i, j),j));
 
       
-    } else {
+    } else { // otherwise we are doing backwards migration
       //backward migration matrices are read column-wise
       for (unsigned int j = 0; j < num_patch; ++j)
         if(_DispMatrix[0]->get(j, i) != 0) ordered_rates_mal.insert(make_pair(_DispMatrix[0]->get(j, i),j));
@@ -1079,26 +1079,26 @@ bool LCE_Disperse_base::setReducedDispMatrix() /// CAN USE THIS FOR DISP KERNEL 
   return true;
 }
 // ----------------------------------------------------------------------------------------
-// LCE_Disperse_base::Migrate
+// LCE_Disperse_base::Migrate Forward
 // ----------------------------------------------------------------------------------------
 unsigned int LCE_Disperse_base::getMigrationPatchForward (sex_t SEX, unsigned int LocalPatch)
 {
-  double sum = 0, random = RAND::Uniform();
+  double sum = 0, random = RAND::Uniform(); // draw a random number
   unsigned int AimedPatch = 0;
   
   if(random > 0.999999) random = 0.999999;//this to avoid overflows when random == 1
   
-  sum = _DispMatrix[SEX]->get(LocalPatch, _reducedDispMat[SEX][LocalPatch][AimedPatch]);
+  sum = _DispMatrix[SEX]->get(LocalPatch, _reducedDispMat[SEX][LocalPatch][AimedPatch]); // FIGURE OUT THIS LINE
 
-  while (random > sum) {
-    AimedPatch++;
-    sum += _DispMatrix[SEX]->get(LocalPatch, _reducedDispMat[SEX][LocalPatch][AimedPatch]);
+  while (random > sum) { // find the aimed patch whose probability matches that of the random number drawn, i.e. the patch that will be migrated into
+    AimedPatch++; // keep going through patches
+    sum += _DispMatrix[SEX]->get(LocalPatch, _reducedDispMat[SEX][LocalPatch][AimedPatch]); // increase sum until hit the patch matching the drawn random number
   }
 
-  return _reducedDispMat[SEX][LocalPatch][AimedPatch];
+  return _reducedDispMat[SEX][LocalPatch][AimedPatch]; // FIGURE OUT THE DETAILS OF WHAT THIS RETURNS - this must be after finding the aimed patch, returning that patch's ID? what is the sex part?
 }
 // ----------------------------------------------------------------------------------------
-// LCE_Disperse_base::Migrate
+// LCE_Disperse_base::Migrate Backward
 // ----------------------------------------------------------------------------------------
 unsigned int LCE_Disperse_base::getMigrationPatchBackward (sex_t SEX, unsigned int LocalPatch)
 {
