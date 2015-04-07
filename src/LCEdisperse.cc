@@ -72,7 +72,9 @@ void LCE_Disperse_base::addParameters (string prefix, ParamUpdaterBase* updater)
   add_parameter(prefix + "_rate",DBL,false,true,0,1,updater);
   add_parameter(prefix + "_rate_fem",DBL,false,true,0,1,updater);
   add_parameter(prefix + "_rate_mal",DBL,false,true,0,1,updater);
-  
+  // adding my own after here KJG:
+  add_parameter(prefix + "_matrix_reduced",MAT,false,false,0,0,updater);
+
 }
 // ----------------------------------------------------------------------------------------
 // LCE_Disperse_base::setParameters
