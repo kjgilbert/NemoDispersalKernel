@@ -138,8 +138,22 @@ cout << "tesing";
     }
   }  
 
-  if( ( (_paramSet->isSet(prefix + "_matrix")) || (_paramSet->isSet(prefix + "_matrix_xy")) ) || // add an or condition for if my dispersal method matrix is set
-     ( _paramSet->isSet(prefix + "_matrix_fem") && _paramSet->isSet(prefix + "_matrix_mal") )  ) // original unedited line
+// add this stuff to see if that causes problem of looking for other parameters that I had before I got the segmentation fault using the or statement below
+  if( _paramSet->isSet(prefix + "_matrix_xy") ) 
+  {
+    if(  ( _paramSet->isSet(prefix + "_rate") ||
+          (_paramSet->isSet(prefix + "_rate_fem") &&  _paramSet->isSet(prefix + "_rate_mal")) )
+       || _paramSet->isSet(prefix + "_model") )
+      warning("parameter \"dispersal_matrix\" takes precedence over parameters \"dispersal_rate\" and \"dispersal_model\"\n");
+    
+    _disp_model = 0;
+
+  }
+
+
+// below code sends to setReducedDispMatrix, don't want that for my edits, return to original state:
+  if( _paramSet->isSet(prefix + "_matrix") || 
+     ( _paramSet->isSet(prefix + "_matrix_fem") && _paramSet->isSet(prefix + "_matrix_mal") )  ) 
 
   {
     if(  ( _paramSet->isSet(prefix + "_rate") ||
