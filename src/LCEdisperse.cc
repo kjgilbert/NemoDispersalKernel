@@ -109,7 +109,8 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
 //  } else { // else do sex-specific dispersal matrices
 
   } else if(_paramSet->isSet(prefix + "_matrix_xy")) { // this is true if the input includes the xy coordinate matrix
-		// want to be sure then that the sorted kernel has also been given in the input file
+	
+	// want to be sure then that the sorted kernel has also been given in the input file
 	if(!_paramSet->isSet(prefix + "_kernel_sorted")) { // if not set, return error, i.e. if it is set, the ! should make it return false and not throw the error
 	  error("Dispersal rate parameters not set!\n");
       return false;
@@ -138,7 +139,9 @@ cout << "tesing";
   }  
 
   if( _paramSet->isSet(prefix + "_matrix") || 
-     ( _paramSet->isSet(prefix + "_matrix_fem") && _paramSet->isSet(prefix + "_matrix_mal") )  )
+//     ( _paramSet->isSet(prefix + "_matrix_fem") && _paramSet->isSet(prefix + "_matrix_mal") )  ) // original unedited line
+       ( _paramSet->isSet(prefix + "_matrix_fem") && _paramSet->isSet(prefix + "_matrix_mal") )  ||
+       (_paramSet->isSet(prefix + "_matrix_xy")) ) // add an or condition for if my dispersal method matrix is set
   {
     if(  ( _paramSet->isSet(prefix + "_rate") ||
           (_paramSet->isSet(prefix + "_rate_fem") &&  _paramSet->isSet(prefix + "_rate_mal")) )
@@ -157,7 +160,7 @@ cout << "tesing";
       if(_isForward) {
         if(!checkForwardDispersalMatrix(_DispMatrix[FEM])) return false;
       } else {
-        if(!checkBackwardDispersalMatrix(_DispMatrix[FEM])) return false; // check htat these both sum to 1, either across rows for forward or across columns for backwards
+        if(!checkBackwardDispersalMatrix(_DispMatrix[FEM])) return false; // check that these both sum to 1, either across rows for forward or across columns for backwards
       }
       
     }
