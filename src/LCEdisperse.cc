@@ -138,10 +138,9 @@ cout << "tesing";
     }
   }  
 
-  if( _paramSet->isSet(prefix + "_matrix") || 
-//     ( _paramSet->isSet(prefix + "_matrix_fem") && _paramSet->isSet(prefix + "_matrix_mal") )  ) // original unedited line
-       ( _paramSet->isSet(prefix + "_matrix_fem") && _paramSet->isSet(prefix + "_matrix_mal") )  ||
-       (_paramSet->isSet(prefix + "_matrix_xy")) ) // add an or condition for if my dispersal method matrix is set
+  if( ( (_paramSet->isSet(prefix + "_matrix")) || (_paramSet->isSet(prefix + "_matrix_xy")) ) || // add an or condition for if my dispersal method matrix is set
+     ( _paramSet->isSet(prefix + "_matrix_fem") && _paramSet->isSet(prefix + "_matrix_mal") )  ) // original unedited line
+
   {
     if(  ( _paramSet->isSet(prefix + "_rate") ||
           (_paramSet->isSet(prefix + "_rate_fem") &&  _paramSet->isSet(prefix + "_rate_mal")) )
