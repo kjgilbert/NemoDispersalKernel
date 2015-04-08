@@ -106,23 +106,19 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
     //same dispersal matrix for males and females
     _DispMatrix[1] = new TMatrix(*_DispMatrix[0]);
     
-  } else { // else do sex-specific dispersal matrices
-/*
-I THINK HERE I WANT TO INSERT MY NEW CODE
-have a second step to the else statements, do:
-	else{
-	if(_paramSet->isSet(prefix + "_matrix_xy")) { // this is true if the input includes the xy coordinate matrix
-	// want to be sure then that the sorted kernel has also been given in the input file
+//  } else { // else do sex-specific dispersal matrices
+
+  } else if(_paramSet->isSet(prefix + "_matrix_xy")) { // this is true if the input includes the xy coordinate matrix
+		// want to be sure then that the sorted kernel has also been given in the input file
 	if(!_paramSet->isSet(prefix + "_kernel_sorted")) { // if not set, return error, i.e. if it is set, the ! should make it return false and not throw the error
 	  error("Dispersal rate parameters not set!\n");
       return false;
     }
     
     // HERE MAKE/RUN A FUNCTION TO DO MY EDITED DISPERSAL METHOD
+cout << "tesing";
 
-
-	}else{ //continue onto next line of original code
-*/
+	} else{ //continue onto next line of original code to do sex-specific dispersal matrices
     
     if(_paramSet->isSet(prefix + "_matrix_fem")) {
       
