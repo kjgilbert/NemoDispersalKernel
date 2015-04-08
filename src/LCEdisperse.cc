@@ -195,6 +195,7 @@ cout << "tesing";
     setReducedDispMatrix(); // calls on setReducedDispMatrix once has read in all matrices so it can order patches for optimal searching rather than searching all despite order of probabilities
     
   } else {
+   if(!_paramSet->isSet(prefix + "_matrix_xy")){ // start if statement I added to only do this if not using my added dispersal kernel method
        
     if(!_paramSet->isSet(prefix + "_model")) {
       error("Dispersal model not set!\n");
@@ -231,7 +232,7 @@ cout << "tesing";
       if(!checkBackwardDispersalMatrix(_DispMatrix[FEM])) return false;
       if(!checkBackwardDispersalMatrix(_DispMatrix[MAL])) return false;
     }
-
+  } // end if statement I added to only do this if not using my added dispersal kernel method
   }  
   return true;
 }
