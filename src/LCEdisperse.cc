@@ -117,7 +117,7 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
     }
     
     // HERE MAKE/RUN A FUNCTION TO DO MY EDITED DISPERSAL METHOD
-cout << "tesing";
+cout << "testing";
 
 	} else{ //continue onto next line of original code to do sex-specific dispersal matrices
     

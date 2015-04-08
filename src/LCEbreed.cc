@@ -64,6 +64,12 @@ DoBreedFuncPtr(0), FecundityFuncPtr(0), CheckMatingConditionFuncPtr(0), GetOffsp
   
   updater = new ParamUpdater< LCE_Breed_base > (&LCE_Breed_base::setSexRatio);
   add_parameter("sex_ratio_mode",STR,false,false,0,0, updater);
+  
+  // Kim adding parameters here now
+  add_parameter("breeding_matrix_xy",MAT,false,false,0,0,updater); // this will be the x and y coordinates to take the breeding function to the aimed patch once it finds the index of where the father will come from
+  add_parameter("breeding_kernel_sorted",MAT,false,false,0,0,updater); // this will be the 1-d array holding the sorted probabilities of dispersing to patches 1 through n, and corresponding to the x,y coordinates in the above matrix. not sure yet if I need to make one for x and one for y or if this will suffice
+
+  
 }
 // ----------------------------------------------------------------------------------------
 // LCE_Breed_base::setParameters
@@ -451,28 +457,35 @@ void LCE_Breed::execute()
 /******  MY EDITED VERSION
 // ******************************
     if( !checkMatingCondition(patch) ){
-    // if no one in the focal patch, find a nearby male to mate with
-    
-    // find a nearby patch that has a male
-    
-    // look in patches in this order, from input file
-    
-    //first patch you find with >0 males becomes patch_father
+      // if no one in the focal patch, find a nearby male to mate with
+      bool male_present = 0; // false = 0, true = 1
+      
+      while(male_present = 0) // do I need ";" here?
 
-    patch_father = 
-    
-    getBreedingWindowPatchNbr(patch);   
-    // make this function in the header file, should take an input array of potential patches for breeding
-    // once finds a patch with males, breeding takes place
-    
-breedNearby needs to return the patch where the male is going to come from, female is going to come from the current patch
-so return some parameter, patch_father and place it in the code below:
-	father = this->getFatherPtr(patch_father, mother, indexOfMother) // BUT NEED TO BE CAREFUL HERE, will there be problems if it calls a mother based on the current patch in this function when I am calling a father from a different patch?
-    // should actually be okay, see header file where random mating is defined, doesn't use mother or mother index anywhere within the function, just set as input to match other mating options
-    
-    }else{
-    continue;
-    }
+      do{
+        // find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
+
+        for(unsigned int j = 1; j < (number of patches contained in the breeding window kernel - 1 ) { // minus 1 because have already checked focal patch in previous line and only continuing if no male there, hence why I start with j=1 (spot one is j=0)
+  // will be something like: for(unsigned int j = 1; j < _popPtr->getBreedingKernelPatchNbr(); j++) { // to go through all the other breeding kernel patches
+        
+          patch = _popPtr->getPatch(j);
+        
+          if( checkMatingCondition(patch) ) { // if there IS a male in the patch being checked (checkMatCond is boolean)
+         
+             //first patch you find with >0 males changes male_present to TRUE
+            male_present = 1; // then change to true, and loop should stop searching, and we proceed onward to breeding 
+          
+          }
+          
+        } // if for loop ends and finds no males, should still have "male_present = 0" here
+
+        if( male_present = 0 ) continue; // CHECK THIS MAKES SENSE TO BE IN THIS SPOT, or do I need an "else" statement for this condition?
+          //// if no males present in breeding window, exit breeding loop and go on or could implement selfing here???????
+          
+      };
+      
+      // OR USE A DO-WHILE? not a while-do?
+      
 
 // ******************************
 */
@@ -488,8 +501,14 @@ so return some parameter, patch_father and place it in the code below:
       cnt += nbBaby;
       //-----------------------------------------------------------------------
       while(nbBaby != 0) {
+      
+      // if we have reached this point, then we know there will be at least one male in at least one patch within the breeding kernel
+      // want to implement "backwards migration" here to then correctly and randomly find the male that becomes the father
+         // will have to on the fly convert the forward migration matrix input from the init file into the appropriate backwards migration matrix
+         
+        // use the corrected backwards migration matrix to find the correct father patch, then just continue to next function as it exists? 
         
-        father = this->getFatherPtr(patch, mother, indexOfMother);
+        father = this->getFatherPtr(patch, mother, indexOfMother); // probably will want to change this to a new function using my inputs
         
         NewOffsprg = makeOffspring( do_breed(mother, father, i) );
         
