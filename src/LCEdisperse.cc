@@ -73,7 +73,8 @@ void LCE_Disperse_base::addParameters (string prefix, ParamUpdaterBase* updater)
   add_parameter(prefix + "_rate_fem",DBL,false,true,0,1,updater);
   add_parameter(prefix + "_rate_mal",DBL,false,true,0,1,updater);
   // adding my own after here KJG:
-  add_parameter(prefix + "_matrix_reduced",MAT,false,false,0,0,updater);
+  add_parameter(prefix + "_matrix_xy",MAT,false,false,0,0,updater); // this will be the x and y coordinates to take the dispersal function to the aimed patch once it finds the index of where the migrant will go
+  add_parameter(prefix + "_kernel_sorted",MAT,false,false,0,0,updater); // this will be the 1-d array holding the sorted probabilities of dispersing to patches 1 through n, and corresponding to the x,y coordinates in the above matrix. not sure yet if I need to make one for x and one for y or if this will suffice
 
 }
 // ----------------------------------------------------------------------------------------
@@ -90,13 +91,13 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
   _disp_propagule_prob = _paramSet->getValue(prefix + "_propagule_prob");
   
   for (unsigned int sex = 0; sex < 2; sex++) {
-    if(_DispMatrix[sex]) {
-      delete _DispMatrix[sex];
+    if(_DispMatrix[sex]) { // false is zero, true is 1
+      delete _DispMatrix[sex]; // so if _DispMatrix[0] equals 1, then delete _DispMatrix[0]?
       _DispMatrix[sex] = NULL;
     }
   }
   
-  if(_paramSet->isSet(prefix + "_matrix")) { // set normal dispersal matrix here
+  if(_paramSet->isSet(prefix + "_matrix")) { // set normal dispersal matrix here if meet criteria
     
     _DispMatrix[0] = new TMatrix();
     
@@ -105,7 +106,23 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
     //same dispersal matrix for males and females
     _DispMatrix[1] = new TMatrix(*_DispMatrix[0]);
     
-  } else {
+  } else { // else do sex-specific dispersal matrices
+/*
+I THINK HERE I WANT TO INSERT MY NEW CODE
+have a second step to the else statements, do:
+	else{
+	if(_paramSet->isSet(prefix + "_matrix_xy")) { // this is true if the input includes the xy coordinate matrix
+	// want to be sure then that the sorted kernel has also been given in the input file
+	if(!_paramSet->isSet(prefix + "_kernel_sorted")) { // if not set, return error, i.e. if it is set, the ! should make it return false and not throw the error
+	  error("Dispersal rate parameters not set!\n");
+      return false;
+    }
+    
+    // HERE MAKE/RUN A FUNCTION TO DO MY EDITED DISPERSAL METHOD
+
+
+	}else{ //continue onto next line of original code
+*/
     
     if(_paramSet->isSet(prefix + "_matrix_fem")) {
       
@@ -122,40 +139,8 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
       _paramSet->getMatrix(prefix + "_matrix_mal",_DispMatrix[MAL]);
     
     }
-  }
-  
-/*
-want a way to pass the reduced dispersal matrices directly instead of building them from the 
-input non-reduced dispersal matrices (this last case is done in 
-LCE_Disperse_base::setReducedDispMatrix(), line 946 in LCEdisperse.cc)
+  }  
 
-The basic idea, though, is to pass one matrix which holds the IDs of the patches connected 
-to each patch in the population and a second which holds the dispersal probabilities to 
-those connected patches. The first matrix would be copied into _reducedDispMat (member of 
-LCE_Disperse_base), the second would be copied into a new _DispMatrix which would allow 
-having rows of different sizes, just like the _reducedDispMat 
-(i.e. of type vector< vector< double > > instead of TMatrix). This would be done in 
-LCE_Disperse_base::setReducedDispMatrix() and you would need to add a parameter to pass 
-the matrix of connected patches.
-*/
-/*
-  if(_paramSet->isSet(prefix + "_matrix_reduced")) { // set new modified, reduced dispersal matrix here
-    
-    _DispMatrix[0] = new TMatrix(); // want this to change to what Fred has described, this is original unchanged line
-    _DispMatrix[0] = new vector< vector< double > >; // incomplete new line
-    
-    
-    _paramSet->getMatrix(prefix + "_matrix_reduced",_DispMatrix[0]);
-    
-    //same dispersal matrix for males and females
-    _DispMatrix[1] = new TMatrix(*_DispMatrix[0]); // need to edit it here too
-    
-    
-    
-    
-  }
-*/
-  
   if( _paramSet->isSet(prefix + "_matrix") || 
      ( _paramSet->isSet(prefix + "_matrix_fem") && _paramSet->isSet(prefix + "_matrix_mal") )  )
   {
