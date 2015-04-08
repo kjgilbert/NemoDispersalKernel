@@ -420,7 +420,9 @@ bool LCE_Disperse_base::setDispMatrix ()
     }
   }
   
-  return setReducedDispMatrix(); // also call on reduced disp matrix here if none of the other dispersal models has been set
+  if( !_paramSet->isSet("dispersal_matrix_xy") ) { // can't use prefix here because in a different function that doesn't recognize them
+    return setReducedDispMatrix(); // also call on reduced disp matrix here if none of the other dispersal models has been set
+  } // may need to add an else statement to go to my new function?
 }
 // ----------------------------------------------------------------------------------------
 // LCE_Disperse_base::setIsland_MigrantPool_Matrix()  (set the Island dispersal matrix)
