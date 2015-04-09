@@ -108,18 +108,7 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
     
 //  } else { // else do sex-specific dispersal matrices
 
-  } else if(_paramSet->isSet(prefix + "_matrix_xy")) { // this is true if the input includes the xy coordinate matrix
-	
-	// want to be sure then that the sorted kernel has also been given in the input file
-	if(!_paramSet->isSet(prefix + "_kernel_sorted")) { // if not set, return error, i.e. if it is set, the ! should make it return false and not throw the error
-	  error("Dispersal rate parameters not set!\n");
-      return false;
-    }
-    
-    // HERE MAKE/RUN A FUNCTION TO DO MY EDITED DISPERSAL METHOD
-cout << "testing";
-
-	} else{ //continue onto next line of original code to do sex-specific dispersal matrices
+	} else { //continue onto next line of original code to do sex-specific dispersal matrices
     
     if(_paramSet->isSet(prefix + "_matrix_fem")) {
       
@@ -136,6 +125,19 @@ cout << "testing";
       _paramSet->getMatrix(prefix + "_matrix_mal",_DispMatrix[MAL]);
     
     }
+    
+    if(_paramSet->isSet(prefix + "_matrix_xy")) { // this is true if the input includes the xy coordinate matrix
+	
+	  // want to be sure then that the sorted kernel has also been given in the input file
+	  if(!_paramSet->isSet(prefix + "_kernel_sorted")) { // if not set, return error, i.e. if it is set, the ! should make it return false and not throw the error
+	    error("Dispersal rate parameters not set!\n");
+        return false;
+      }
+    
+    // HERE MAKE/RUN A FUNCTION TO DO MY EDITED DISPERSAL METHOD
+cout << "testing";
+     }
+
   }  
 
 // add this stuff to see if that causes problem of looking for other parameters that I had before I got the segmentation fault using the or statement below
@@ -147,6 +149,8 @@ cout << "testing";
       warning("parameter \"dispersal_matrix\" takes precedence over parameters \"dispersal_rate\" and \"dispersal_model\"\n");
     
     _disp_model = 0;
+    
+cout << " reaches disp_model=0 for new matrix line 153 \n";
 
   }
 
@@ -156,6 +160,9 @@ cout << "testing";
      ( _paramSet->isSet(prefix + "_matrix_fem") && _paramSet->isSet(prefix + "_matrix_mal") )  ) 
 
   {
+
+cout << "incorrectly enters if statement for normal disp matrix  line 164 \n";
+
     if(  ( _paramSet->isSet(prefix + "_rate") ||
           (_paramSet->isSet(prefix + "_rate_fem") &&  _paramSet->isSet(prefix + "_rate_mal")) )
        || _paramSet->isSet(prefix + "_model") )
