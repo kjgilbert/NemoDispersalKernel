@@ -105,7 +105,7 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
     
     //same dispersal matrix for males and females
     _DispMatrix[1] = new TMatrix(*_DispMatrix[0]);
-    
+cout << "line 108 \n";    
 //  } else { // else do sex-specific dispersal matrices
 
 	} else { //continue onto next line of original code to do sex-specific dispersal matrices
@@ -115,7 +115,7 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
       _DispMatrix[FEM] = new TMatrix();
       
       _paramSet->getMatrix(prefix + "_matrix_fem",_DispMatrix[FEM]);
-      
+cout << "line 118 \n";      
     }
     
     if(_paramSet->isSet(prefix + "_matrix_mal")) {
@@ -123,7 +123,7 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
       _DispMatrix[MAL] = new TMatrix();
       
       _paramSet->getMatrix(prefix + "_matrix_mal",_DispMatrix[MAL]);
-    
+cout << "line 126 \n";    
     }
     
     if(_paramSet->isSet(prefix + "_aimed_patch_matrix")) { // this is true if the input includes the xy coordinate matrix
@@ -135,11 +135,10 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
       }
     
     // HERE MAKE/RUN A FUNCTION TO DO MY EDITED DISPERSAL METHOD
-cout << "testing";
+cout << "testing line 138 \n";
      }
-
   }  
-
+/*
 // add this stuff to see if that causes problem of looking for other parameters that I had before I got the segmentation fault using the or statement below
   if( _paramSet->isSet(prefix + "_aimed_patch_matrix") ) 
   {
@@ -150,19 +149,13 @@ cout << "testing";
     
     _disp_model = 0;
     
-cout << " reaches disp_model=0 for new matrix line 153 \n";
-
   }
-
+*/
 
 // below code sends to setReducedDispMatrix, don't want that for my edits, return to original state:
   if( _paramSet->isSet(prefix + "_matrix") || 
      ( _paramSet->isSet(prefix + "_matrix_fem") && _paramSet->isSet(prefix + "_matrix_mal") )  ) 
-
-  {
-
-cout << "incorrectly enters if statement for normal disp matrix  line 164 \n";
-
+  {  cout << "incorrectly enters if statement for normal disp matrix  line 164 \n";
     if(  ( _paramSet->isSet(prefix + "_rate") ||
           (_paramSet->isSet(prefix + "_rate_fem") &&  _paramSet->isSet(prefix + "_rate_mal")) )
        || _paramSet->isSet(prefix + "_model") )
@@ -198,36 +191,43 @@ cout << "incorrectly enters if statement for normal disp matrix  line 164 \n";
         if(!checkBackwardDispersalMatrix(_DispMatrix[MAL])) return false;
       }
     }
-    
+cout << "line 201 \n";    
     setReducedDispMatrix(); // calls on setReducedDispMatrix once has read in all matrices so it can order patches for optimal searching rather than searching all despite order of probabilities
     
-  } else {
-   if(!_paramSet->isSet(prefix + "_aimed_patch_matrix")){ // start if statement I added to only do this if not using my added dispersal kernel method
+  } else if(_paramSet->isSet(prefix + "_aimed_patch_matrix")) {
        
+     if(  ( _paramSet->isSet(prefix + "_rate") ||
+          (_paramSet->isSet(prefix + "_rate_fem") &&  _paramSet->isSet(prefix + "_rate_mal")) )
+       || _paramSet->isSet(prefix + "_model") )
+      warning("parameter \"dispersal_matrix\" takes precedence over parameters \"dispersal_rate\" and \"dispersal_model\"\n");
+    
+    _disp_model = 0;
+     
+     // NEED TO SET CONTENTS OF THE MATRIX HERE, as in previous if statement
+       
+  } else {
+  
     if(!_paramSet->isSet(prefix + "_model")) {
       error("Dispersal model not set!\n");
       return false;
     }
     
-    if(_paramSet->isSet(prefix + "_rate")) 
-      
-    {
+    if(_paramSet->isSet(prefix + "_rate")) {
+
       _fem_rate = _mal_rate = _paramSet->getValue(prefix + "_rate");
       
       if(!setDispMatrix()) return false;
-    }
-    
-    else if(  _paramSet->isSet(prefix + "_rate_fem") &&  _paramSet->isSet(prefix + "_rate_mal")  ) 
-      
-    {
+
+    } else if(  _paramSet->isSet(prefix + "_rate_fem") &&  _paramSet->isSet(prefix + "_rate_mal") ) {
+
       _fem_rate = _paramSet->getValue(prefix + "_rate_fem");
       
       _mal_rate = _paramSet->getValue(prefix + "_rate_mal");
       
       if(!setDispMatrix()) return false;
-    }
+
+    } else {
     
-    else {
       error("Dispersal rate parameters not set!\n");
       return false;
     }
@@ -239,7 +239,7 @@ cout << "incorrectly enters if statement for normal disp matrix  line 164 \n";
       if(!checkBackwardDispersalMatrix(_DispMatrix[FEM])) return false;
       if(!checkBackwardDispersalMatrix(_DispMatrix[MAL])) return false;
     }
-  } // end if statement I added to only do this if not using my added dispersal kernel method
+
   }  
   return true;
 }
@@ -428,6 +428,7 @@ bool LCE_Disperse_base::setDispMatrix ()
   }
   
   if( !_paramSet->isSet("dispersal_aimed_patch_matrix") ) { // can't use prefix here because in a different function that doesn't recognize them
+cout << "line 431 \n";
     return setReducedDispMatrix(); // also call on reduced disp matrix here if none of the other dispersal models has been set
   } // may need to add an else statement to go to my new function?
 }

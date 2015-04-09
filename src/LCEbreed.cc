@@ -514,7 +514,7 @@ void LCE_Breed::execute()
        run function getFatherPatch using matrices and rand number
 
        father = this->getFatherPtr(father_patch, mother, indexOfMother);
-/*
+*/
 // comment next line out once I get my code working above
         father = this->getFatherPtr(patch, mother, indexOfMother); // probably will want to change this to a new function using my inputs
         
