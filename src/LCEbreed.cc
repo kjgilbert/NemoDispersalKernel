@@ -67,7 +67,7 @@ DoBreedFuncPtr(0), FecundityFuncPtr(0), CheckMatingConditionFuncPtr(0), GetOffsp
   
   // Kim adding parameters here now
   add_parameter("breeding_matrix_xy",MAT,false,false,0,0,updater); // this will be the x and y coordinates to take the breeding function to the aimed patch once it finds the index of where the father will come from
-  add_parameter("breeding_kernel_sorted",MAT,false,false,0,0,updater); // this will be the 1-d array holding the sorted probabilities of dispersing to patches 1 through n, and corresponding to the x,y coordinates in the above matrix. not sure yet if I need to make one for x and one for y or if this will suffice
+  add_parameter("breeding_kernel_sorted",MAT,false,false,0,0,updater); // this will be the 1-d array holding the sorted probabilities of sending gametes to patches 1 through n, and corresponding to the x,y coordinates in the above matrix. not sure yet if I need to make one for x and one for y or if this will suffice
 
   
 }
@@ -430,6 +430,8 @@ void LCE_Breed::execute()
   Individual* father;  // make a father variable of class "individual"
   Individual* NewOffsprg;
   unsigned int nbBaby;
+  // not sure if this is needed or correct? Patch* father_patch; // to make the variable father_patch of class Patch
+  bool male_present; // don't necessarily need this here if I create it with the declaration at the same time below
 #ifdef _DEBUG_
   message("LCE_Breed::execute (Patch nb: %i offsprg nb: %i adlt nb: %i)\n"
           ,_popPtr->getPatchNbr(),_popPtr->size( OFFSPRG ),_popPtr->size( ADULTS ));
@@ -458,7 +460,7 @@ void LCE_Breed::execute()
 // ******************************
     if( !checkMatingCondition(patch) ){
       // if no one in the focal patch, find a nearby male to mate with
-      bool male_present = 0; // false = 0, true = 1
+      male_present = 0; // false = 0, true = 1
       
       while(male_present = 0) // do I need ";" here?
 
@@ -467,10 +469,11 @@ void LCE_Breed::execute()
 
         for(unsigned int j = 1; j < (number of patches contained in the breeding window kernel - 1 ) { // minus 1 because have already checked focal patch in previous line and only continuing if no male there, hence why I start with j=1 (spot one is j=0)
   // will be something like: for(unsigned int j = 1; j < _popPtr->getBreedingKernelPatchNbr(); j++) { // to go through all the other breeding kernel patches
+  // NO! J MUST iterate through the patch IDs connected to the focal patch by the breeding window
+   // shouldn't be hard to get those numbers because I'll have the focal patch ID, i, and can use the x,y function to get the others      
+          father_patch = _popPtr->getPatch(j); // I think this might not be the right way to index because I'll only be in a subset of the patches here, so I just need to index through those, and that list comes from the list of those patches connected to the focal patch
         
-          patch = _popPtr->getPatch(j);
-        
-          if( checkMatingCondition(patch) ) { // if there IS a male in the patch being checked (checkMatCond is boolean)
+          if( checkMatingCondition(father_patch) ) { // if there IS a male in the patch being checked (checkMatCond is boolean)
          
              //first patch you find with >0 males changes male_present to TRUE
             male_present = 1; // then change to true, and loop should stop searching, and we proceed onward to breeding 
@@ -507,7 +510,12 @@ void LCE_Breed::execute()
          // will have to on the fly convert the forward migration matrix input from the init file into the appropriate backwards migration matrix
          
         // use the corrected backwards migration matrix to find the correct father patch, then just continue to next function as it exists? 
-        
+/*
+       run function getFatherPatch using matrices and rand number
+
+       father = this->getFatherPtr(father_patch, mother, indexOfMother);
+/*
+// comment next line out once I get my code working above
         father = this->getFatherPtr(patch, mother, indexOfMother); // probably will want to change this to a new function using my inputs
         
         NewOffsprg = makeOffspring( do_breed(mother, father, i) );
@@ -517,6 +525,6 @@ void LCE_Breed::execute()
         nbBaby--;
       }//_END__WHILE
       
-    }
-  }
+    } // end for loop going through all mothers in given patch, size = total number of mothers, i.e. number of females in the patch
+  } // end for loop going through all patches, i
 }
