@@ -73,7 +73,7 @@ void LCE_Disperse_base::addParameters (string prefix, ParamUpdaterBase* updater)
   add_parameter(prefix + "_rate_fem",DBL,false,true,0,1,updater);
   add_parameter(prefix + "_rate_mal",DBL,false,true,0,1,updater);
   // adding my own after here KJG:
-  add_parameter(prefix + "_matrix_xy",MAT,false,false,0,0,updater); // this will be the x and y coordinates to take the dispersal function to the aimed patch once it finds the index of where the migrant will go
+  add_parameter(prefix + "_aimed_patch_matrix",MAT,false,false,0,0,updater); // each row is for one patch, the ID's of the patches that migrants will go to based on probabilities in the _kernel_sorted matrix
   add_parameter(prefix + "_kernel_sorted",MAT,false,false,0,0,updater); // this will be the 1-d array holding the sorted probabilities of dispersing to patches 1 through n, and corresponding to the x,y coordinates in the above matrix. not sure yet if I need to make one for x and one for y or if this will suffice
 
 }
@@ -126,7 +126,7 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
     
     }
     
-    if(_paramSet->isSet(prefix + "_matrix_xy")) { // this is true if the input includes the xy coordinate matrix
+    if(_paramSet->isSet(prefix + "_aimed_patch_matrix")) { // this is true if the input includes the xy coordinate matrix
 	
 	  // want to be sure then that the sorted kernel has also been given in the input file
 	  if(!_paramSet->isSet(prefix + "_kernel_sorted")) { // if not set, return error, i.e. if it is set, the ! should make it return false and not throw the error
@@ -141,7 +141,7 @@ cout << "testing";
   }  
 
 // add this stuff to see if that causes problem of looking for other parameters that I had before I got the segmentation fault using the or statement below
-  if( _paramSet->isSet(prefix + "_matrix_xy") ) 
+  if( _paramSet->isSet(prefix + "_aimed_patch_matrix") ) 
   {
     if(  ( _paramSet->isSet(prefix + "_rate") ||
           (_paramSet->isSet(prefix + "_rate_fem") &&  _paramSet->isSet(prefix + "_rate_mal")) )
@@ -202,7 +202,7 @@ cout << "incorrectly enters if statement for normal disp matrix  line 164 \n";
     setReducedDispMatrix(); // calls on setReducedDispMatrix once has read in all matrices so it can order patches for optimal searching rather than searching all despite order of probabilities
     
   } else {
-   if(!_paramSet->isSet(prefix + "_matrix_xy")){ // start if statement I added to only do this if not using my added dispersal kernel method
+   if(!_paramSet->isSet(prefix + "_aimed_patch_matrix")){ // start if statement I added to only do this if not using my added dispersal kernel method
        
     if(!_paramSet->isSet(prefix + "_model")) {
       error("Dispersal model not set!\n");
@@ -427,7 +427,7 @@ bool LCE_Disperse_base::setDispMatrix ()
     }
   }
   
-  if( !_paramSet->isSet("dispersal_matrix_xy") ) { // can't use prefix here because in a different function that doesn't recognize them
+  if( !_paramSet->isSet("dispersal_aimed_patch_matrix") ) { // can't use prefix here because in a different function that doesn't recognize them
     return setReducedDispMatrix(); // also call on reduced disp matrix here if none of the other dispersal models has been set
   } // may need to add an else statement to go to my new function?
 }
