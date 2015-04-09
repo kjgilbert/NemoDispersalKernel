@@ -66,8 +66,8 @@ DoBreedFuncPtr(0), FecundityFuncPtr(0), CheckMatingConditionFuncPtr(0), GetOffsp
   add_parameter("sex_ratio_mode",STR,false,false,0,0, updater);
   
   // Kim adding parameters here now
-  add_parameter("breeding_matrix_xy",MAT,false,false,0,0,updater); // this will be the x and y coordinates to take the breeding function to the aimed patch once it finds the index of where the father will come from
-  add_parameter("breeding_kernel_sorted",MAT,false,false,0,0,updater); // this will be the 1-d array holding the sorted probabilities of sending gametes to patches 1 through n, and corresponding to the x,y coordinates in the above matrix. not sure yet if I need to make one for x and one for y or if this will suffice
+  add_parameter("breeding_aimed_patch_matrix",MAT,false,false,0,0,updater); // this will be the patch IDs of patches to potentially look for mates in for a given patch
+  add_parameter("breeding_kernel_sorted",MAT,false,false,0,0,updater); // this will be the 1-d array holding the sorted probabilities of sending gametes to patches 1 through n, and corresponding to the IDs in the above matrix.
 
   
 }

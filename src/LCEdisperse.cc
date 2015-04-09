@@ -106,8 +106,6 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
     //same dispersal matrix for males and females
     _DispMatrix[1] = new TMatrix(*_DispMatrix[0]);
 
-//  } else { // else do sex-specific dispersal matrices
-
 	} else { //continue onto next line of original code to do sex-specific dispersal matrices
     
     if(_paramSet->isSet(prefix + "_matrix_fem")) {
@@ -127,7 +125,15 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
     }
     
     if(_paramSet->isSet(prefix + "_aimed_patch_matrix")) { // this is true if the input includes the xy coordinate matrix
-	
+	  
+	  _DispMatrix[0] = new TMatrix();
+    
+      _paramSet->getMatrix(prefix + "_aimed_patch_matrix",_DispMatrix[0]);
+    
+      //same dispersal matrix for males and females
+      _DispMatrix[1] = new TMatrix(*_DispMatrix[0]);
+ // _DispMatrix is an adress in memory
+
 	  // want to be sure then that the sorted kernel has also been given in the input file
 	  if(!_paramSet->isSet(prefix + "_kernel_sorted")) { // if not set, return error, i.e. if it is set, the ! should make it return false and not throw the error
 	    error("Dispersal rate parameters not set!\n");
@@ -138,19 +144,6 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
 
      }
   }  
-/*
-// add this stuff to see if that causes problem of looking for other parameters that I had before I got the segmentation fault using the or statement below
-  if( _paramSet->isSet(prefix + "_aimed_patch_matrix") ) 
-  {
-    if(  ( _paramSet->isSet(prefix + "_rate") ||
-          (_paramSet->isSet(prefix + "_rate_fem") &&  _paramSet->isSet(prefix + "_rate_mal")) )
-       || _paramSet->isSet(prefix + "_model") )
-      warning("parameter \"dispersal_matrix\" takes precedence over parameters \"dispersal_rate\" and \"dispersal_model\"\n");
-    
-    _disp_model = 0;
-    
-  }
-*/
 
 // below code sends to setReducedDispMatrix, don't want that for my edits, return to original state:
   if( _paramSet->isSet(prefix + "_matrix") || 
@@ -294,7 +287,7 @@ void LCE_Disperse_base::allocateDispMatrix (sex_t sex, unsigned int dim)
     _DispMatrix[sex] = new TMatrix(dim,dim);
 }
 // ----------------------------------------------------------------------------------------
-// LCE_Disperse_base::checkDispMatrix
+// LCE_Disperse_base::checkDispMatrix Forward
 // ----------------------------------------------------------------------------------------
 bool LCE_Disperse_base::checkForwardDispersalMatrix (TMatrix* mat)
 {
@@ -323,7 +316,7 @@ bool LCE_Disperse_base::checkForwardDispersalMatrix (TMatrix* mat)
   return true;
 }
 // ----------------------------------------------------------------------------------------
-// LCE_Disperse_base::checkDispMatrix
+// LCE_Disperse_base::checkDispMatrix Backward
 // ----------------------------------------------------------------------------------------
 bool LCE_Disperse_base::checkBackwardDispersalMatrix (TMatrix* mat)
 {
@@ -427,10 +420,11 @@ bool LCE_Disperse_base::setDispMatrix ()
     }
   }
   
-  if( !_paramSet->isSet("dispersal_aimed_patch_matrix") ) { // can't use prefix here because in a different function that doesn't recognize them
-
-    return setReducedDispMatrix(); // also call on reduced disp matrix here if none of the other dispersal models has been set
-  } // may need to add an else statement to go to my new function?
+  if(_paramSet->isSet("dispersal_aimed_patch_matrix") ) { // can't use prefix here because in a different function that doesn't recognize them
+    return setAimedDispMatrix(); // go to my new function?
+  } else {
+    return setReducedDispMatrix(); //  call on reduced disp matrix here if none of the other dispersal models has been set
+  } 
 }
 // ----------------------------------------------------------------------------------------
 // LCE_Disperse_base::setIsland_MigrantPool_Matrix()  (set the Island dispersal matrix)
@@ -979,6 +973,81 @@ bool LCE_Disperse_base::setLatticeAbsorbingMatrix()
   return true;
 }
 // ----------------------------------------------------------------------------------------
+// LCE_Disperse_base::setAimedDispMatrix
+// ----------------------------------------------------------------------------------------
+/* Kim is making this function to work for nemo edits
+*/
+bool LCE_Disperse_base::setAimedDispMatrix()
+{
+  unsigned int num_patch = (border_model == 3 ? _npatch + 1 : _npatch); // SOMEHOW? check on this. this is getting the number of patches from that code?
+
+  //multimap automatically orders the key values in ascending order
+  multimap<double, unsigned int> ordered_rates_fem, ordered_rates_mal;
+  typedef multimap<double, unsigned int>::const_iterator CI;
+
+  for (unsigned int sex = 0; sex < 2; sex++)
+    if(_reducedDispMat[sex].size() != 0) _reducedDispMat[sex].clear();
+  
+  
+  for (unsigned int i = 0; i < num_patch; ++i) { // go through all the patches
+    
+    _reducedDispMat[0].push_back(vector<unsigned int>());
+    _reducedDispMat[1].push_back(vector<unsigned int>());
+    
+    ordered_rates_fem.clear();
+    ordered_rates_mal.clear();
+    
+    if(_isForward) { // if doing forward migration
+      
+      for (unsigned int j = 0; j < num_patch; ++j)
+        if(_DispMatrix[0]->get(i, j) != 0) ordered_rates_mal.insert(make_pair(_DispMatrix[0]->get(i, j), j));
+      
+      
+      for (unsigned int j = 0; j < num_patch; ++j)      // go through all the patches
+        if(_DispMatrix[1]->get(i, j) != 0) ordered_rates_fem.insert(make_pair(_DispMatrix[1]->get(i, j),j));
+
+      
+    } else { // otherwise we are doing backwards migration
+      //backward migration matrices are read column-wise
+      for (unsigned int j = 0; j < num_patch; ++j)
+        if(_DispMatrix[0]->get(j, i) != 0) ordered_rates_mal.insert(make_pair(_DispMatrix[0]->get(j, i),j));
+      
+      for (unsigned int j = 0; j < num_patch; ++j)
+        if(_DispMatrix[1]->get(j, i) != 0) ordered_rates_fem.insert(make_pair(_DispMatrix[1]->get(j, i),j));
+    }
+    
+    
+    if(ordered_rates_fem.size() == 1) {
+        _reducedDispMat[1][i].push_back(ordered_rates_fem.begin()->second);
+      //store the patch indices in reverse order of the migration rates:
+    } else {
+        CI p;
+      for (p = --ordered_rates_fem.end(); p != --ordered_rates_fem.begin(); --p) {
+          _reducedDispMat[1][i].push_back(p->second);
+      }
+  
+      //bug fix for the case of 2 patches only (for some reason the second patch recieves only one value...???)
+      if(p == ordered_rates_fem.begin() && (_reducedDispMat[1][i].size() < ordered_rates_fem.size()) )
+        _reducedDispMat[1][i].push_back(p->second);
+    }
+
+    
+    if(ordered_rates_mal.size() == 1) {
+      _reducedDispMat[0][i].push_back(ordered_rates_mal.begin()->second);
+    } else {
+      CI p;
+      for (p = --ordered_rates_mal.end(); p != --ordered_rates_mal.begin(); --p) {
+        _reducedDispMat[0][i].push_back(p->second);
+      }
+      
+      if(p == ordered_rates_mal.begin() && (_reducedDispMat[0][i].size() < ordered_rates_mal.size()) )
+        _reducedDispMat[0][i].push_back(p->second);
+    }
+  }
+  
+  return true;
+}
+// ----------------------------------------------------------------------------------------
 // LCE_Disperse_base::setReducedDispMatrix
 // ----------------------------------------------------------------------------------------
 /** The reduced dispersal matrix contains the indices of the patches to which each patch is
@@ -1124,10 +1193,14 @@ unsigned int LCE_Disperse_base::getMigrationPatchBackward (sex_t SEX, unsigned i
     
   return _reducedDispMat[SEX][LocalPatch][SourcePatch];
 }
+
+
+
+
+
+
 // ------------------------------------------------------------------------------
-
 //                             LCE_Disperse_ConstDisp
-
 // ----------------------------------------------------------------------------------------
 // LCE_Disperse_ConstDisp
 // ----------------------------------------------------------------------------------------
@@ -1296,9 +1369,7 @@ void LCE_Disperse_ConstDisp::MigratePatch_AbsorbingBorder (sex_t SEX, unsigned i
   }//end while
 }
 // ----------------------------------------------------------------------------------------
-
 //                             LCE_SeedDisp/
-
 // ----------------------------------------------------------------------------------------
 LCE_SeedDisp::LCE_SeedDisp () : LifeCycleEvent ("seed_disp","")
 {
@@ -1314,9 +1385,7 @@ LCE_SeedDisp::LCE_SeedDisp () : LifeCycleEvent ("seed_disp","")
 //  get_paramset()->show_up();
 }
 // ------------------------------------------------------------------------------
-
 //                             LCE_Disperse_EvolDisp/
-
 // ----------------------------------------------------------------------------------------
 LCE_Disperse_EvolDisp::LCE_Disperse_EvolDisp () 
 : LifeCycleEvent("disperse_evoldisp",""), _fem_cost(-1.0), _mal_cost(-1.0),
