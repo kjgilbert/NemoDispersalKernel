@@ -77,6 +77,7 @@ public:
   void allocateDispMatrix  (sex_t sex, unsigned int dim);
   bool setDispMatrix();
   bool setReducedDispMatrix();
+  bool setAimedDispMatrix(); // added by Kim
   bool updateDispMatrix();
   bool setIsland_MigrantPool_Matrix();
   bool setIsland_PropagulePool_Matrix();

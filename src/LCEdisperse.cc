@@ -977,22 +977,23 @@ bool LCE_Disperse_base::setLatticeAbsorbingMatrix()
 // ----------------------------------------------------------------------------------------
 /* Kim is making this function to work for nemo edits
 */
+
 bool LCE_Disperse_base::setAimedDispMatrix()
 {
-  unsigned int num_patch = (border_model == 3 ? _npatch + 1 : _npatch); // SOMEHOW? check on this. this is getting the number of patches from that code?
+ /* unsigned int num_patch = (border_model == 3 ? _npatch + 1 : _npatch); // SOMEHOW? check on this. this is getting the number of patches from that code?
 
   //multimap automatically orders the key values in ascending order
   multimap<double, unsigned int> ordered_rates_fem, ordered_rates_mal;
   typedef multimap<double, unsigned int>::const_iterator CI;
 
   for (unsigned int sex = 0; sex < 2; sex++)
-    if(_reducedDispMat[sex].size() != 0) _reducedDispMat[sex].clear();
+    if(_aimedDispMat[sex].size() != 0) _aimedDispMat[sex].clear();
   
   
   for (unsigned int i = 0; i < num_patch; ++i) { // go through all the patches
     
-    _reducedDispMat[0].push_back(vector<unsigned int>());
-    _reducedDispMat[1].push_back(vector<unsigned int>());
+    _aimedDispMat[0].push_back(vector<unsigned int>());
+    _aimedDispMat[1].push_back(vector<unsigned int>());
     
     ordered_rates_fem.clear();
     ordered_rates_mal.clear();
@@ -1018,35 +1019,36 @@ bool LCE_Disperse_base::setAimedDispMatrix()
     
     
     if(ordered_rates_fem.size() == 1) {
-        _reducedDispMat[1][i].push_back(ordered_rates_fem.begin()->second);
+        _aimedDispMat[1][i].push_back(ordered_rates_fem.begin()->second);
       //store the patch indices in reverse order of the migration rates:
     } else {
         CI p;
       for (p = --ordered_rates_fem.end(); p != --ordered_rates_fem.begin(); --p) {
-          _reducedDispMat[1][i].push_back(p->second);
+          _aimedDispMat[1][i].push_back(p->second);
       }
   
       //bug fix for the case of 2 patches only (for some reason the second patch recieves only one value...???)
-      if(p == ordered_rates_fem.begin() && (_reducedDispMat[1][i].size() < ordered_rates_fem.size()) )
-        _reducedDispMat[1][i].push_back(p->second);
+      if(p == ordered_rates_fem.begin() && (_aimedDispMat[1][i].size() < ordered_rates_fem.size()) )
+        _aimedDispMat[1][i].push_back(p->second);
     }
 
     
     if(ordered_rates_mal.size() == 1) {
-      _reducedDispMat[0][i].push_back(ordered_rates_mal.begin()->second);
+      _aimedDispMat[0][i].push_back(ordered_rates_mal.begin()->second);
     } else {
       CI p;
       for (p = --ordered_rates_mal.end(); p != --ordered_rates_mal.begin(); --p) {
-        _reducedDispMat[0][i].push_back(p->second);
+        _aimedDispMat[0][i].push_back(p->second);
       }
       
-      if(p == ordered_rates_mal.begin() && (_reducedDispMat[0][i].size() < ordered_rates_mal.size()) )
-        _reducedDispMat[0][i].push_back(p->second);
+      if(p == ordered_rates_mal.begin() && (_aimedDispMat[0][i].size() < ordered_rates_mal.size()) )
+        _aimedDispMat[0][i].push_back(p->second);
     }
   }
-  
+  */
+  cout << "test new function \n";
   return true;
-}
+} 
 // ----------------------------------------------------------------------------------------
 // LCE_Disperse_base::setReducedDispMatrix
 // ----------------------------------------------------------------------------------------
