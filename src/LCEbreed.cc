@@ -432,6 +432,7 @@ void LCE_Breed::execute()
   unsigned int nbBaby;
   // not sure if this is needed or correct? Patch* father_patch; // to make the variable father_patch of class Patch
   bool male_present; // don't necessarily need this here if I create it with the declaration at the same time below
+  bool breed_window;
 #ifdef _DEBUG_
   message("LCE_Breed::execute (Patch nb: %i offsprg nb: %i adlt nb: %i)\n"
           ,_popPtr->getPatchNbr(),_popPtr->size( OFFSPRG ),_popPtr->size( ADULTS ));
@@ -447,42 +448,52 @@ void LCE_Breed::execute()
   for(unsigned int i = 0; i < _popPtr->getPatchNbr(); i++) { // which patch are we in
     
     patch = _popPtr->getPatch(i);  // set 'patch' to the current patch we're doing breeding for
-    
-//cout << patch;  // what values ID a patch? - seem to be locations in memory
-//cout << "," << i << " ";  // can actually use i as it indexes through the list of patches
- 
+     
     if( !checkMatingCondition(patch) ) continue; // give the focal patch to the mating condition function
     	// if no males, exit loop and continue through code
 		// this calls "checkNoSelfing" function in line 93 of this file which is defined in LCEbreed.h
 		//	checkNoSelfing returns true if it counts >0 females and >0 males in a patch 	
   
+  
 /******  MY EDITED VERSION
+//cout << patch;  // what values ID a patch? - seem to be locations in memory
+//cout << "," << i << " ";  // can actually use i as it indexes through the list of patches
 // ******************************
+
     if( !checkMatingCondition(patch) ){
-      // if no one in the focal patch, find a nearby male to mate with
+      breed_window = 1; // to use below when I tell it to actually use the breeding window function
+      
+       // if no one in the focal patch, find a nearby male to mate with
       male_present = 0; // false = 0, true = 1
       
       while(male_present = 0) // do I need ";" here?
-
+      
       do{
-        // find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
+         // find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
+        focal_patch = _popPtr->getPatch(i);
+        
+         // find the row in the ID matrix that is for that pop
+        aimedPatchList = matrix(i);
+        
+        for(unsigned int j = 1; length(aimedPatchList), j++ ) { // j = 1 because have already checked focal patch in previous line and only continuing if no male there(spot one is j=0)
 
-        for(unsigned int j = 1; j < (number of patches contained in the breeding window kernel - 1 ) { // minus 1 because have already checked focal patch in previous line and only continuing if no male there, hence why I start with j=1 (spot one is j=0)
-  // will be something like: for(unsigned int j = 1; j < _popPtr->getBreedingKernelPatchNbr(); j++) { // to go through all the other breeding kernel patches
-  // NO! J MUST iterate through the patch IDs connected to the focal patch by the breeding window
-   // shouldn't be hard to get those numbers because I'll have the focal patch ID, i, and can use the x,y function to get the others      
-          father_patch = _popPtr->getPatch(j); // I think this might not be the right way to index because I'll only be in a subset of the patches here, so I just need to index through those, and that list comes from the list of those patches connected to the focal patch
+          father_patch = _popPtr->getPatch(j); // check the next patch in the list
         
           if( checkMatingCondition(father_patch) ) { // if there IS a male in the patch being checked (checkMatCond is boolean)
          
              //first patch you find with >0 males changes male_present to TRUE
-            male_present = 1; // then change to true, and loop should stop searching, and we proceed onward to breeding 
-          
+            male_present = 1;   // then change to true, and loop should stop searching, and we proceed onward to breeding 
+            break;  // CHECK ON THIS, NEED TO BREAK OUT OF THE FOR LOOP IF FIND ANY 1 MALE, should it be here and is this the right notation?
           }
           
-        } // if for loop ends and finds no males, should still have "male_present = 0" here
+        } // end for loop - if finds no males, should still have "male_present = 0" here
 
-        if( male_present = 0 ) continue; // CHECK THIS MAKES SENSE TO BE IN THIS SPOT, or do I need an "else" statement for this condition?
+        if( male_present = 0 && selfing = FALSE) {
+          continue; // if no male found, continue on without breeding 
+        } else {
+          will self;
+        }
+        // CHECK THIS MAKES SENSE TO BE IN THIS SPOT, or do I need an "else" statement for this condition?
           //// if no males present in breeding window, exit breeding loop and go on or could implement selfing here???????
           
       };
@@ -504,16 +515,28 @@ void LCE_Breed::execute()
       cnt += nbBaby;
       //-----------------------------------------------------------------------
       while(nbBaby != 0) {
-      
+        
       // if we have reached this point, then we know there will be at least one male in at least one patch within the breeding kernel
       // want to implement "backwards migration" here to then correctly and randomly find the male that becomes the father
          // will have to on the fly convert the forward migration matrix input from the init file into the appropriate backwards migration matrix
          
         // use the corrected backwards migration matrix to find the correct father patch, then just continue to next function as it exists? 
 /*
-       run function getFatherPatch using matrices and rand number
+        if(breed_window = 1){ // then find the other patch that the father comes from
+          
+          run function getFatherPatch using matrices and rand number
+                 
+          father_patch = _popPtr->getPatch(k);
+        
+          father = this->getFatherPtr(father_patch, mother, indexOfMother);
 
-       father = this->getFatherPtr(father_patch, mother, indexOfMother);
+        } else { // get the father from the focal patch
+
+          father = this->getFatherPtr(patch, mother, indexOfMother); 
+
+        }
+         
+
 */
 // comment next line out once I get my code working above
         father = this->getFatherPtr(patch, mother, indexOfMother); // probably will want to change this to a new function using my inputs
