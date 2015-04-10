@@ -48,6 +48,7 @@ LCE_Disperse_base::LCE_Disperse_base ()
 {
   _DispMatrix[0] = NULL;
   _DispMatrix[1] = NULL;
+  cout << "in LCE disperse base line 51" << endl;
 
 }
 // ----------------------------------------------------------------------------------------
@@ -58,6 +59,7 @@ LCE_Disperse_base::~LCE_Disperse_base ()
   
   if(NULL != _DispMatrix[1])
     delete _DispMatrix[1];
+  cout << "in ~ LCE disperse base line 62" << endl;
 }
 // ----------------------------------------------------------------------------------------
 void LCE_Disperse_base::addParameters (string prefix, ParamUpdaterBase* updater)
@@ -75,6 +77,7 @@ void LCE_Disperse_base::addParameters (string prefix, ParamUpdaterBase* updater)
   // adding my own after here KJG:
   add_parameter(prefix + "_aimed_patch_matrix",MAT,false,false,0,0,updater); // each row is for one patch, the ID's of the patches that migrants will go to based on probabilities in the _kernel_sorted matrix
   add_parameter(prefix + "_kernel_sorted",MAT,false,false,0,0,updater); // this will be the 1-d array holding the sorted probabilities of dispersing to patches 1 through n, and corresponding to the x,y coordinates in the above matrix. not sure yet if I need to make one for x and one for y or if this will suffice
+  cout << "making parameters line 80" << endl;
 
 }
 // ----------------------------------------------------------------------------------------
@@ -98,7 +101,10 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
   }
   
   if(_paramSet->isSet(prefix + "_matrix")) { // set normal dispersal matrix here if meet criteria
-    
+    cout << "line 104, should NOT get here with AIMED dispersal_matrix" << endl;
+    cout << "dispersal_matrix = " << _paramSet->isSet(prefix + "_matrix") << endl;
+    cout << "aimed matrix = " << _paramSet->isSet(prefix + "_aimed_patch_matrix") << endl;
+  
     _DispMatrix[0] = new TMatrix();
     
     _paramSet->getMatrix(prefix + "_matrix",_DispMatrix[0]);
@@ -125,7 +131,10 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
     }
     
     if(_paramSet->isSet(prefix + "_aimed_patch_matrix")) { // this is true if the input includes the xy coordinate matrix
-	  
+	cout << "line 134, should get here with AIMED dispersal_matrix" << endl;
+    cout << "dispersal_matrix = " << _paramSet->isSet(prefix + "_matrix") << endl;
+    cout << "aimed matrix = " << _paramSet->isSet(prefix + "_aimed_patch_matrix") << endl;
+
 	  _DispMatrix[0] = new TMatrix();
     
       _paramSet->getMatrix(prefix + "_aimed_patch_matrix",_DispMatrix[0]);
@@ -149,6 +158,10 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
   if( _paramSet->isSet(prefix + "_matrix") || 
      ( _paramSet->isSet(prefix + "_matrix_fem") && _paramSet->isSet(prefix + "_matrix_mal") )  ) 
   {
+	cout << "line 161, should NOT get here with AIMED dispersal_matrix" << endl;
+    cout << "dispersal_matrix = " << _paramSet->isSet(prefix + "_matrix") << endl;
+    cout << "aimed matrix = " << _paramSet->isSet(prefix + "_aimed_patch_matrix") << endl;
+
     if(  ( _paramSet->isSet(prefix + "_rate") ||
           (_paramSet->isSet(prefix + "_rate_fem") &&  _paramSet->isSet(prefix + "_rate_mal")) )
        || _paramSet->isSet(prefix + "_model") )
@@ -188,7 +201,10 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
     setReducedDispMatrix(); // calls on setReducedDispMatrix once has read in all matrices so it can order patches for optimal searching rather than searching all despite order of probabilities
     
   } else if(_paramSet->isSet(prefix + "_aimed_patch_matrix")) {
-       
+ 	cout << "line 204, should get here with AIMED dispersal_matrix" << endl;
+    cout << "dispersal_matrix = " << _paramSet->isSet(prefix + "_matrix") << endl;
+    cout << "aimed matrix = " << _paramSet->isSet(prefix + "_aimed_patch_matrix") << endl;
+      
      if(  ( _paramSet->isSet(prefix + "_rate") ||
           (_paramSet->isSet(prefix + "_rate_fem") &&  _paramSet->isSet(prefix + "_rate_mal")) )
        || _paramSet->isSet(prefix + "_model") )
@@ -200,6 +216,10 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
        
   } else {
   
+   	cout << "line 219, should NOT get here with AIMED dispersal_matrix" << endl;
+    cout << "dispersal_matrix = " << _paramSet->isSet(prefix + "_matrix") << endl;
+    cout << "aimed matrix = " << _paramSet->isSet(prefix + "_aimed_patch_matrix") << endl;
+
     if(!_paramSet->isSet(prefix + "_model")) {
       error("Dispersal model not set!\n");
       return false;
@@ -1162,18 +1182,19 @@ bool LCE_Disperse_base::setReducedDispMatrix() /// CAN USE THIS FOR DISP KERNEL 
 // ----------------------------------------------------------------------------------------
 unsigned int LCE_Disperse_base::getMigrationPatchForward (sex_t SEX, unsigned int LocalPatch)
 {
+  cout << "in LCE_Disperse_base::getMigrationPatchForward, line 1185" << endl;
   double sum = 0, random = RAND::Uniform(); // draw a random number
   unsigned int AimedPatch = 0;
   
   if(random > 0.999999) random = 0.999999;//this to avoid overflows when random == 1
-  
+cout << " just before sum line 1190" << endl;  
   sum = _DispMatrix[SEX]->get(LocalPatch, _reducedDispMat[SEX][LocalPatch][AimedPatch]); // FIGURE OUT THIS LINE
-
+cout << "got sum, line 1192" << endl;
   while (random > sum) { // find the aimed patch whose probability matches that of the random number drawn, i.e. the patch that will be migrated into
     AimedPatch++; // keep going through patches
     sum += _DispMatrix[SEX]->get(LocalPatch, _reducedDispMat[SEX][LocalPatch][AimedPatch]); // increase sum until hit the patch matching the drawn random number
   }
-
+cout << "finished while loop, line 1197" << endl;
   return _reducedDispMat[SEX][LocalPatch][AimedPatch]; // FIGURE OUT THE DETAILS OF WHAT THIS RETURNS - this must be after finding the aimed patch, returning that patch's ID? what is the sex part?
 }
 // ----------------------------------------------------------------------------------------
@@ -1195,12 +1216,6 @@ unsigned int LCE_Disperse_base::getMigrationPatchBackward (sex_t SEX, unsigned i
     
   return _reducedDispMat[SEX][LocalPatch][SourcePatch];
 }
-
-
-
-
-
-
 // ------------------------------------------------------------------------------
 //                             LCE_Disperse_ConstDisp
 // ----------------------------------------------------------------------------------------
@@ -1224,13 +1239,13 @@ bool LCE_Disperse_ConstDisp::setParameters(string prefix)
   if(!LCE_Disperse_base::setBaseParameters(prefix)) return false;
   
   switch ( getDispersalModel() ) {
-    case 0: //dispersal matrix given in input
+    case 0: //dispersal matrix given in input, for all of the cases here, all but case 2 result in const disp
     case 1:
     case 3:
     case 4:
       doMigration = &LCE_Disperse_ConstDisp::Migrate;
       break;
-    case 2:
+    case 2: // this is propagule pool model, and different because propagule patches are reassigned each generation
       doMigration = &LCE_Disperse_ConstDisp::Migrate_propagule;
       break;
     default: {
@@ -1287,6 +1302,7 @@ void LCE_Disperse_ConstDisp::execute ()
 // ----------------------------------------------------------------------------------------
 void LCE_Disperse_ConstDisp::Migrate ()
 {
+
   Patch *patch;
   
   for(unsigned int i = 0; i < _npatch; i++) {
@@ -1321,6 +1337,7 @@ void LCE_Disperse_ConstDisp::Migrate_propagule ()
 // ----------------------------------------------------------------------------------------
 void LCE_Disperse_ConstDisp::MigratePatch (sex_t SEX, unsigned int LocalPatch)
 {
+
   Patch* patch = _popPtr->getPatch(LocalPatch);
   unsigned int AimedPatch;
   unsigned int Limit = _npatch -1;
