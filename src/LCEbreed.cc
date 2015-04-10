@@ -430,9 +430,13 @@ void LCE_Breed::execute()
   Individual* father;  // make a father variable of class "individual"
   Individual* NewOffsprg;
   unsigned int nbBaby;
-  // not sure if this is needed or correct? Patch* father_patch; // to make the variable father_patch of class Patch
+  // Kim adding following params
   bool male_present; // don't necessarily need this here if I create it with the declaration at the same time below
   bool breed_window;
+  Patch* father_patch;
+  Patch* check_patch;
+  bool doSelfing;
+  
 #ifdef _DEBUG_
   message("LCE_Breed::execute (Patch nb: %i offsprg nb: %i adlt nb: %i)\n"
           ,_popPtr->getPatchNbr(),_popPtr->size( OFFSPRG ),_popPtr->size( ADULTS ));
@@ -491,7 +495,8 @@ void LCE_Breed::execute()
         if( male_present = 0 && selfing = FALSE) {
           continue; // if no male found, continue on without breeding 
         } else {
-          will self;
+          run selfing function to implement selfing;
+          doSelfing = 1;
         }
         // CHECK THIS MAKES SENSE TO BE IN THIS SPOT, or do I need an "else" statement for this condition?
           //// if no males present in breeding window, exit breeding loop and go on or could implement selfing here???????
@@ -525,11 +530,38 @@ void LCE_Breed::execute()
         if(breed_window = 1){ // then find the other patch that the father comes from
           
           run function getFatherPatch using matrices and rand number
+            breeding_kernel_sorted // get that focal patch's breeding window probabilities, same for everyone - THIS NEEDS TO BE CREATED SOMEWHERE
+            breeding_window patch IDs <-  row(i) breeding_aimed_patch_matrix  // get all possible patches in that focal patch's breeding window
+            
+//  males per patch in breeding window: 
+             array_to_store_num_males = 0;
+             for(unsigned int k = 1, k < length(breedingkernelsorted), k++){ // IMPORTANT HERE, do I go to less than length, or less than/ equal to to include the last patch in the list?
+               check_patch = _popPtr->getPatch(k);
+               unsigned int numMales = check_patch->size(MAL, ADLTx)
+               array_to_store_num_males[k] <- numMales
+             }
+             
+        // now have list of number of males in each patch that is not the focal patch
+             get rid of zeros?
+             NEED SOME SORT OF NORMALIZATION HERE? FOR HTE PROBABILITIES OF ONLY GOING TO THE PATCH WITH MALES PRESENT
+             
+             draw a random uniform number from 0-1
+               unsigned int rand = RAND::Uniform(1));  // CHECK THIS IS RIGHT?
+             find which patch that falls into
+              for(unsigned int i = 0, i < length(breedingkernelsorted), i++){
+                if(rand < breeding_kernel_sorted
+              }
+             use that patch as the source of the father
+             
                  
           father_patch = _popPtr->getPatch(k);
         
           father = this->getFatherPtr(father_patch, mother, indexOfMother);
 
+        } else if(doSelfing) { // only if I set input parameter for selfing to occur when no other mates are around
+        
+          father = mother;
+          
         } else { // get the father from the focal patch
 
           father = this->getFatherPtr(patch, mother, indexOfMother); 
