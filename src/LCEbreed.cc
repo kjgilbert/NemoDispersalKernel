@@ -509,6 +509,65 @@ void LCE_Breed::execute()
 
     if( !checkMatingCondition(patch) || breedWindow) {    // if breedWindow is true (=1) then will always use the breeding window regardless of any males in focal patch
       breedWindow = 1;           // to use below when I tell it to actually use the breeding window function, 1=true
+     
+     
+     
+       bool malePresent = 0;   // if no one in the focal patch, find a nearby male to mate with
+       Patch* focalPatch;
+   
+       focalPatch = _popPtr->getPatch(i);
+    
+       aimedPatchMatrix[0] = new TMatrix();       // make an empty matrix
+       _paramSet->getMatrix("breeding_aimed_patch_matrix",aimedPatchMatrix[0]);  // fill it with parameters from input file
+       aimedPatchMatrix[1] = new TMatrix(*aimedPatchMatrix[0]); // don't know what this is doing? copied from LCEdisperse.
+
+       do{          // find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
+    
+         aimedList = aimedPatchMatrix[i]; // pull out the row of the matrix for the focal patch?
+    
+         for(unsigned int j = 1; j < size(aimedList); j++ ) { // j = 1 because have already checked focal patch in previous line and only continuing if no male there(spot one is j=0)
+
+           fatherPatch = _popPtr->getPatch(j); // check the next patch in the list
+        
+           if( checkMatingCondition(fatherPatch) ) { // if there IS a male in the patch being checked (checkMatCond is boolean)
+                  //first patch you find with >0 males changes male_present to TRUE
+             malePresent = 1;   // then change to true, and loop should stop searching, and we proceed onward to breeding 
+             break;  // BREAK OUT OF THE FOR LOOP IF FIND ANY 1 MALE   -- maybe don't need it because of the while-do? 
+           }
+      
+         } // end for loop, if enter the if statement, should leave for loop early with malePresent = 1;
+           // if finds no males, should still have "male_present = 0" here
+       }   // end do loop
+       while(malePresent = 0)     // do I need ";" here?
+     
+     } else if( !malePresent && !doSelfing ) {   // if no male in breeding window AND not doing selfing, continue on without breeding
+
+       continue;
+
+     }
+ 
+ NOT WORKING:
+src/LCEbreed.cc: In member function ‘virtual void LCE_Breed::execute()’:
+src/LCEbreed.cc:520: error: ‘aimedPatchMatrix’ was not declared in this scope
+src/LCEbreed.cc:526: error: ‘aimedList’ was not declared in this scope
+src/LCEbreed.cc:528: error: ‘size’ was not declared in this scope
+src/LCEbreed.cc:543: error: expected `;' before ‘}’ token
+make: *** [src/LCEbreed.o] Error 1
+    
+     
+     
+need to figure out 
+	how to do the matrix
+	how to do the while loop properly
+	how to find the size of the matrix
+     
+     
+     
+     
+     
+     
+     
+     
       
         // if no one in the focal patch, find a nearby male to mate with
       malePresent = 0;           // false = 0, true = 1
