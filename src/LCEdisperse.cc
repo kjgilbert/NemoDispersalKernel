@@ -827,20 +827,23 @@ bool LCE_Disperse_base::setLatticeAbsorbingMatrix()
 
 bool LCE_Disperse_base::setAimedDispMatrix()
 {
- /* unsigned int num_patch = (border_model == 3 ? _npatch + 1 : _npatch); // SOMEHOW? check on this. this is getting the number of patches from that code?
+ /*   
+ 
+  unsigned int border_model = (unsigned int)get_parameter_value(_prefix + "_border_model"); // check if there are reflecting or absorbing boundaries set from the input
+  unsigned int num_patch = (border_model == 3 ? _npatch + 1 : _npatch); // SOMEHOW? check on this. this is getting the number of patches from that code?
 
   //multimap automatically orders the key values in ascending order
   multimap<double, unsigned int> ordered_rates_fem, ordered_rates_mal;
   typedef multimap<double, unsigned int>::const_iterator CI;
 
   for (unsigned int sex = 0; sex < 2; sex++)
-    if(_aimedDispMat[sex].size() != 0) _aimedDispMat[sex].clear();
+    if(_reducedDispMat[sex].size() != 0) _reducedDispMat[sex].clear();
   
   
   for (unsigned int i = 0; i < num_patch; ++i) { // go through all the patches
     
-    _aimedDispMat[0].push_back(vector<unsigned int>());
-    _aimedDispMat[1].push_back(vector<unsigned int>());
+    _reducedDispMat[0].push_back(vector<unsigned int>());
+    _reducedDispMat[1].push_back(vector<unsigned int>());
     
     ordered_rates_fem.clear();
     ordered_rates_mal.clear();
@@ -848,54 +851,54 @@ bool LCE_Disperse_base::setAimedDispMatrix()
     if(_isForward) { // if doing forward migration
       
       for (unsigned int j = 0; j < num_patch; ++j)
-        if(_DispMatrix[0]->get(i, j) != 0) ordered_rates_mal.insert(make_pair(_DispMatrix[0]->get(i, j), j));
+        if(_ultraReducedDispMat[0]->get(i, j) != 0) ordered_rates_mal.insert(make_pair(_ultraReducedDispMat[0]->get(i, j), j));
       
       
       for (unsigned int j = 0; j < num_patch; ++j)      // go through all the patches
-        if(_DispMatrix[1]->get(i, j) != 0) ordered_rates_fem.insert(make_pair(_DispMatrix[1]->get(i, j),j));
+        if(_ultraReducedDispMat[1]->get(i, j) != 0) ordered_rates_fem.insert(make_pair(_ultraReducedDispMat[1]->get(i, j),j));
 
       
     } else { // otherwise we are doing backwards migration
       //backward migration matrices are read column-wise
       for (unsigned int j = 0; j < num_patch; ++j)
-        if(_DispMatrix[0]->get(j, i) != 0) ordered_rates_mal.insert(make_pair(_DispMatrix[0]->get(j, i),j));
+        if(_ultraReducedDispMat[0]->get(j, i) != 0) ordered_rates_mal.insert(make_pair(_ultraReducedDispMat[0]->get(j, i),j));
       
       for (unsigned int j = 0; j < num_patch; ++j)
-        if(_DispMatrix[1]->get(j, i) != 0) ordered_rates_fem.insert(make_pair(_DispMatrix[1]->get(j, i),j));
+        if(_ultraReducedDispMat[1]->get(j, i) != 0) ordered_rates_fem.insert(make_pair(_ultraReducedDispMat[1]->get(j, i),j));
     }
-    
-    
+        
     if(ordered_rates_fem.size() == 1) {
-        _aimedDispMat[1][i].push_back(ordered_rates_fem.begin()->second);
+        _reducedDispMat[1][i].push_back(ordered_rates_fem.begin()->second);
       //store the patch indices in reverse order of the migration rates:
     } else {
         CI p;
       for (p = --ordered_rates_fem.end(); p != --ordered_rates_fem.begin(); --p) {
-          _aimedDispMat[1][i].push_back(p->second);
+          _reducedDispMat[1][i].push_back(p->second);
       }
   
       //bug fix for the case of 2 patches only (for some reason the second patch recieves only one value...???)
-      if(p == ordered_rates_fem.begin() && (_aimedDispMat[1][i].size() < ordered_rates_fem.size()) )
-        _aimedDispMat[1][i].push_back(p->second);
+      if(p == ordered_rates_fem.begin() && (_reducedDispMat[1][i].size() < ordered_rates_fem.size()) )
+        _reducedDispMat[1][i].push_back(p->second);
     }
 
     
     if(ordered_rates_mal.size() == 1) {
-      _aimedDispMat[0][i].push_back(ordered_rates_mal.begin()->second);
+      _reducedDispMat[0][i].push_back(ordered_rates_mal.begin()->second);
     } else {
       CI p;
       for (p = --ordered_rates_mal.end(); p != --ordered_rates_mal.begin(); --p) {
-        _aimedDispMat[0][i].push_back(p->second);
+        _reducedDispMat[0][i].push_back(p->second);
       }
       
-      if(p == ordered_rates_mal.begin() && (_aimedDispMat[0][i].size() < ordered_rates_mal.size()) )
-        _aimedDispMat[0][i].push_back(p->second);
+      if(p == ordered_rates_mal.begin() && (_reducedDispMat[0][i].size() < ordered_rates_mal.size()) )
+        _reducedDispMat[0][i].push_back(p->second);
     }
   }
-  */
-  cout << "test new function \n";
+
+cout << "test aimed matrix new function" << endl;
+  
   return true;
-} 
+}
 // ----------------------------------------------------------------------------------------
 // LCE_Disperse_base::setReducedDispMatrix
 // ----------------------------------------------------------------------------------------
