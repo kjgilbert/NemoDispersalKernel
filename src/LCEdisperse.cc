@@ -48,7 +48,6 @@ LCE_Disperse_base::LCE_Disperse_base ()
 {
   _DispMatrix[0] = NULL;
   _DispMatrix[1] = NULL;
-  cout << "in LCE disperse base line 51" << endl;
 
 }
 // ----------------------------------------------------------------------------------------
@@ -77,7 +76,6 @@ void LCE_Disperse_base::addParameters (string prefix, ParamUpdaterBase* updater)
   // adding my own after here KJG:
   add_parameter(prefix + "_aimed_patch_matrix",MAT,false,false,0,0,updater); // each row is for one patch, the ID's of the patches that migrants will go to based on probabilities in the _kernel_sorted matrix
   add_parameter(prefix + "_kernel_sorted",MAT,false,false,0,0,updater); // this will be the 1-d array holding the sorted probabilities of dispersing to patches 1 through n, and corresponding to the x,y coordinates in the above matrix. not sure yet if I need to make one for x and one for y or if this will suffice
-  cout << "making parameters line 80" << endl;
 
 }
 // ----------------------------------------------------------------------------------------
@@ -95,7 +93,7 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
   
   for (unsigned int sex = 0; sex < 2; sex++) {
     if(_DispMatrix[sex]) { // false is zero, true is 1
-      delete _DispMatrix[sex]; // so if _DispMatrix[0] equals 1, then delete _DispMatrix[0]?
+      delete _DispMatrix[sex]; // so if _DispMatrix[0] equals 1, then delete _DispMatrix[0]? and same for 1 and 2?
       _DispMatrix[sex] = NULL;
     }
   }
@@ -148,7 +146,7 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
 	    error("Dispersal rate parameters not set!\n");
         return false;
       }
-    
+    assert( 1 == 2 );  // see if gets here and breaks here
     // HERE MAKE/RUN A FUNCTION TO DO MY EDITED DISPERSAL METHOD
 
      }
@@ -265,7 +263,7 @@ bool LCE_Disperse_base::updateDispMatrix()
     error("cannot update the dispersal matrix provided in input when number of populations changes.\n");
     return false;
   }
-  
+  cout << "updating matrix?" << endl;
   return setDispMatrix();
 }
 // ----------------------------------------------------------------------------------------
@@ -297,7 +295,7 @@ void LCE_Disperse_base::reset_counters()
   }  
 }
 // ----------------------------------------------------------------------------------------
-// LCE_Disperse_base::allocateDispMatrix
+// LCE_Disperse_base::allocateDispMatrix -- Seems to only be for existing models, not when a matrix is provided
 // ----------------------------------------------------------------------------------------
 void LCE_Disperse_base::allocateDispMatrix (sex_t sex, unsigned int dim)
 {  
@@ -1182,14 +1180,14 @@ bool LCE_Disperse_base::setReducedDispMatrix() /// CAN USE THIS FOR DISP KERNEL 
 // ----------------------------------------------------------------------------------------
 unsigned int LCE_Disperse_base::getMigrationPatchForward (sex_t SEX, unsigned int LocalPatch)
 {
-  cout << "in LCE_Disperse_base::getMigrationPatchForward, line 1185" << endl;
+
   double sum = 0, random = RAND::Uniform(); // draw a random number
   unsigned int AimedPatch = 0;
   
   if(random > 0.999999) random = 0.999999;//this to avoid overflows when random == 1
 cout << " just before sum line 1190" << endl;  
   sum = _DispMatrix[SEX]->get(LocalPatch, _reducedDispMat[SEX][LocalPatch][AimedPatch]); // FIGURE OUT THIS LINE
-cout << "got sum, line 1192" << endl;
+
   while (random > sum) { // find the aimed patch whose probability matches that of the random number drawn, i.e. the patch that will be migrated into
     AimedPatch++; // keep going through patches
     sum += _DispMatrix[SEX]->get(LocalPatch, _reducedDispMat[SEX][LocalPatch][AimedPatch]); // increase sum until hit the patch matching the drawn random number
