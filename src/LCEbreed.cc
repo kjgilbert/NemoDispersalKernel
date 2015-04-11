@@ -68,8 +68,9 @@ DoBreedFuncPtr(0), FecundityFuncPtr(0), CheckMatingConditionFuncPtr(0), GetOffsp
   // Kim adding parameters here now
   add_parameter("breeding_aimed_patch_matrix",MAT,false,false,0,0,updater); // this will be the patch IDs of patches to potentially look for mates in for a given patch
   add_parameter("breeding_kernel_sorted",MAT,false,false,0,0,updater); // this will be the 1-d array holding the sorted probabilities of sending gametes to patches 1 through n, and corresponding to the IDs in the above matrix.
-
-  
+  add_parameter("self_if_alone", BOOL, false, false, 0, 0, upd); // ad a parameter to init file that I can set and if exists will say to self when no mates are found
+  add_parameter("always_breed_window", BOOL, false, false, 0, 0, upd); // ad a parameter to init file that I can set and if exists will say to self when no mates are found
+ 
 }
 // ----------------------------------------------------------------------------------------
 // LCE_Breed_base::setParameters
@@ -431,10 +432,11 @@ void LCE_Breed::execute()
   Individual* NewOffsprg;
   unsigned int nbBaby;
   // Kim adding following params
-  bool male_present; // don't necessarily need this here if I create it with the declaration at the same time below
-  bool breed_window;
-  Patch* father_patch;
-  Patch* check_patch;
+  bool malePresent; // don't necessarily need this here if I create it with the declaration at the same time below
+  bool breedWindow;
+  Patch* fatherPatch;
+  Patch* checkPatch;
+  Patch* focalPatch;
   bool doSelfing;
   
 #ifdef _DEBUG_
@@ -448,65 +450,57 @@ void LCE_Breed::execute()
   }
   //because mean fecundity can be patch-specific, we have to check whether the patch number changed
   if (_mean_fecundity->getNbCols() != _popPtr->getPatchNbr()) LCE_Breed_base::setFecundity(); // find the mother's patch's fecundity
-  
+
+// ARE THESE IN THE RIGHT SPOT?
+    doSelfing = 0;   // set defaults
+    breedWindow = 0;  
+    if(_paramSet->isSet("self_if_alone")) doSelfing = 1;  // only change defaults if specified from init file
+    if(_paramSet->isSet("always_breed_window")) breedWindow = 1;
+
   for(unsigned int i = 0; i < _popPtr->getPatchNbr(); i++) { // which patch are we in
     
-    patch = _popPtr->getPatch(i);  // set 'patch' to the current patch we're doing breeding for
+    patch = _popPtr->getPatch(i);  // current patch we're doing breeding for
      
     if( !checkMatingCondition(patch) ) continue; // give the focal patch to the mating condition function
     	// if no males, exit loop and continue through code
 		// this calls "checkNoSelfing" function in line 93 of this file which is defined in LCEbreed.h
 		//	checkNoSelfing returns true if it counts >0 females and >0 males in a patch 	
-  
-  
 /******  MY EDITED VERSION
-//cout << patch;  // what values ID a patch? - seem to be locations in memory
-//cout << "," << i << " ";  // can actually use i as it indexes through the list of patches
-// ******************************
 
-    if( !checkMatingCondition(patch) ){
-      breed_window = 1; // to use below when I tell it to actually use the breeding window function
+    if( !checkMatingCondition(patch) || breedWindow) {    // if breedWindow is true (=1) then will always use the breeding window regardless of any males in focal patch
+      breedWindow = 1;           // to use below when I tell it to actually use the breeding window function, 1=true
       
-       // if no one in the focal patch, find a nearby male to mate with
-      male_present = 0; // false = 0, true = 1
+        // if no one in the focal patch, find a nearby male to mate with
+      malePresent = 0;           // false = 0, true = 1
       
-      while(male_present = 0) // do I need ";" here?
+      while(malePresent = 0)     // do I need ";" here?
       
       do{
-         // find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
-        focal_patch = _popPtr->getPatch(i);
+          // find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
+        focalPatch = _popPtr->getPatch(i);
         
          // find the row in the ID matrix that is for that pop
         aimedPatchList = matrix(i);
         
         for(unsigned int j = 1; length(aimedPatchList), j++ ) { // j = 1 because have already checked focal patch in previous line and only continuing if no male there(spot one is j=0)
 
-          father_patch = _popPtr->getPatch(j); // check the next patch in the list
+          fatherPatch = _popPtr->getPatch(j); // check the next patch in the list
         
-          if( checkMatingCondition(father_patch) ) { // if there IS a male in the patch being checked (checkMatCond is boolean)
+          if( checkMatingCondition(fatherPatch) ) { // if there IS a male in the patch being checked (checkMatCond is boolean)
          
              //first patch you find with >0 males changes male_present to TRUE
-            male_present = 1;   // then change to true, and loop should stop searching, and we proceed onward to breeding 
+            malePresent = 1;   // then change to true, and loop should stop searching, and we proceed onward to breeding 
             break;  // CHECK ON THIS, NEED TO BREAK OUT OF THE FOR LOOP IF FIND ANY 1 MALE, should it be here and is this the right notation?
           }
           
         } // end for loop - if finds no males, should still have "male_present = 0" here
 
-        if( male_present = 0 && selfing = FALSE) {
-          continue; // if no male found, continue on without breeding 
-        } else {
-          run selfing function to implement selfing;
-          doSelfing = 1;
+        if( !malePresent && !doSelfing ) {   // if no male in breeding window AND not doing selfing, continue on without breeding
+          continue;
         }
-        // CHECK THIS MAKES SENSE TO BE IN THIS SPOT, or do I need an "else" statement for this condition?
-          //// if no males present in breeding window, exit breeding loop and go on or could implement selfing here???????
-          
+                  
       };
-      
-      // OR USE A DO-WHILE? not a while-do?
-      
 
-// ******************************
 */
     
     unsigned int cnt =0;
@@ -521,13 +515,13 @@ void LCE_Breed::execute()
       //-----------------------------------------------------------------------
       while(nbBaby != 0) {
         
-      // if we have reached this point, then we know there will be at least one male in at least one patch within the breeding kernel
+      // if we have reached this point, then we know there will be at least one male in at least one patch within the breeding kernel or that selfing will occur
       // want to implement "backwards migration" here to then correctly and randomly find the male that becomes the father
          // will have to on the fly convert the forward migration matrix input from the init file into the appropriate backwards migration matrix
          
         // use the corrected backwards migration matrix to find the correct father patch, then just continue to next function as it exists? 
 /*
-        if(breed_window = 1){ // then find the other patch that the father comes from
+        if(breed_window){ // then find the other patch that the father comes from
           
           run function getFatherPatch using matrices and rand number
             breeding_kernel_sorted // get that focal patch's breeding window probabilities, same for everyone - THIS NEEDS TO BE CREATED SOMEWHERE
@@ -549,7 +543,7 @@ void LCE_Breed::execute()
                unsigned int rand = RAND::Uniform(1));  // CHECK THIS IS RIGHT?
              find which patch that falls into
               for(unsigned int i = 0, i < length(breedingkernelsorted), i++){
-                if(rand < breeding_kernel_sorted
+                if(rand < breeding_kernel_sorted)
               }
              use that patch as the source of the father
              
@@ -558,11 +552,11 @@ void LCE_Breed::execute()
         
           father = this->getFatherPtr(father_patch, mother, indexOfMother);
 
-        } else if(doSelfing) { // only if I set input parameter for selfing to occur when no other mates are around
+        } else if(doSelfing) {  // only if I set input parameter for selfing to occur when no other mates are around
         
           father = mother;
           
-        } else { // get the father from the focal patch
+        } else { // get the father from the focal patch - will not reach here if no selfing and no male present in focal patch
 
           father = this->getFatherPtr(patch, mother, indexOfMother); 
 
