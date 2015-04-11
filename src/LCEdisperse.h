@@ -49,6 +49,9 @@ class LCE_Disperse_base: public virtual LifeCycleEvent
   TMatrix* _DispMatrix[2]; 
   
   vector< vector<unsigned int> > _reducedDispMat[2];
+
+  vector< vector<unsigned int> > _ultraReducedDispMat[2]; // Kim adding, this is the new matrix that can have rows of different sizes, i.e. is not a TMatrix
+
   
   string _prefix;
   
