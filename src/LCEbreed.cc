@@ -508,11 +508,9 @@ void LCE_Breed::execute()
 /******  MY EDITED VERSION
 
     if( !checkMatingCondition(patch) || breedWindow) {    // if breedWindow is true (=1) then will always use the breeding window regardless of any males in focal patch
-      breedWindow = 1;           // to use below when I tell it to actually use the breeding window function, 1=true
+       breedWindow = 1;           // to use below when I tell it to actually use the breeding window function, 1=true
      
-     
-     
-       bool malePresent = 0;   // if no one in the focal patch, find a nearby male to mate with
+       bool malePresent = 0;   // if no one in the focal patch, find a nearby male to mate with; false = 0, true = 1
        Patch* focalPatch;
    
        focalPatch = _popPtr->getPatch(i);
@@ -524,8 +522,10 @@ void LCE_Breed::execute()
        do{          // find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
     
          aimedList = aimedPatchMatrix[i]; // pull out the row of the matrix for the focal patch?
-    
-         for(unsigned int j = 1; j < size(aimedList); j++ ) { // j = 1 because have already checked focal patch in previous line and only continuing if no male there(spot one is j=0)
+         
+         unsigned int lengthAimedList = sizeof(aimedList) /  sizeof(aimedList[0]);  // b/c all elements have the same size, this is the way to find the length, i.e. number of elements in the array
+
+         for(unsigned int j = 1; j < lengthAimedList; j++ ) { // j = 1 because have already checked focal patch in previous line and only continuing if no male there(spot one is j=0)
 
            fatherPatch = _popPtr->getPatch(j); // check the next patch in the list
         
@@ -563,53 +563,10 @@ need to figure out
      
      
      
-     
-     
-     
-     
-     
-      
-        // if no one in the focal patch, find a nearby male to mate with
-      malePresent = 0;           // false = 0, true = 1
-      
-      while(malePresent = 0)     // do I need ";" here?
-      do{          // find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
-
-        focalPatch = _popPtr->getPatch(i);
-
 *************************
-           _DispMatrix[0] = new TMatrix();
 breeding_aimed_patch_matrix[0] = new TMatrix(); // tmatrix is a class defined in tmatrix.h, it has 3 indices? [rows][cols][length]  where length is numrows * num cols
-
-    _DispMatrix[0] = new TMatrix();
-    
-    _paramSet->getMatrix(prefix + "_matrix",_DispMatrix[0]);
-    
-    //same dispersal matrix for males and females
-    _DispMatrix[1] = new TMatrix(*_DispMatrix[0]);
 *************************
  
-        aimedPatchList = matrix(i);     // find the row in the ID matrix that is for that pop
-        
-        for(unsigned int j = 1; length(aimedPatchList), j++ ) { // j = 1 because have already checked focal patch in previous line and only continuing if no male there(spot one is j=0)
-
-          fatherPatch = _popPtr->getPatch(j); // check the next patch in the list
-        
-          if( checkMatingCondition(fatherPatch) ) { // if there IS a male in the patch being checked (checkMatCond is boolean)
-         
-             //first patch you find with >0 males changes male_present to TRUE
-            malePresent = 1;   // then change to true, and loop should stop searching, and we proceed onward to breeding 
-            break;  // CHECK ON THIS, NEED TO BREAK OUT OF THE FOR LOOP IF FIND ANY 1 MALE, should it be here and is this the right notation?
-          }
-          
-        } // end for loop - if finds no males, should still have "male_present = 0" here
-
-        if( !malePresent && !doSelfing ) {   // if no male in breeding window AND not doing selfing, continue on without breeding
-          continue;
-        }
-                  
-      };
-
 */
     
     unsigned int cnt =0;
@@ -630,22 +587,50 @@ breeding_aimed_patch_matrix[0] = new TMatrix(); // tmatrix is a class defined in
          
         // use the corrected backwards migration matrix to find the correct father patch, then just continue to next function as it exists? 
 /*
-        if(breed_window){ // then find the other patch that the father comes from
-          
-          run function getFatherPatch using matrices and rand number
-            breeding_kernel_sorted // get that focal patch's breeding window probabilities, same for everyone - THIS NEEDS TO BE CREATED SOMEWHERE
-            breeding_window patch IDs <-  row(i) breeding_aimed_patch_matrix  // get all possible patches in that focal patch's breeding window
-            
-//  males per patch in breeding window: 
-             array_to_store_num_males = 0;
-             for(unsigned int k = 1, k < length(breedingkernelsorted), k++){ // IMPORTANT HERE, do I go to less than length, or less than/ equal to to include the last patch in the list?
-               check_patch = _popPtr->getPatch(k);
-               unsigned int numMales = check_patch->size(MAL, ADLTx)
-               array_to_store_num_males[k] <- numMales
-             }
-             
-        // now have list of number of males in each patch that is not the focal patch
-             get rid of zeros?
+
+
+        if(breedWindow){ // then find the other patch that the father comes from
+             //  males per patch in breeding window: 
+           unsigned int lengthBreedKernel = sizeof(breeding_kernel_sorted) /  sizeof(breeding_kernel_sorted[0]);  // b/c all elements have the same size, this is the way to find the length, i.e. number of elements in the array
+           
+           unsigned int arrayNumMales[lengthBreedKernel]; // empty array to fill in number of males per patch
+           unsigned int totalMales = 0;
+           unsigned int numerator[lengthBreedKernel];
+           unsigned int denominator = 0;
+           unsigned int normalBreedKernel[lengthBreedKernel];
+
+           for(unsigned int k = 0; k < lengthBreedKernel; k++){ // IMPORTANT HERE, do I go to less than length, or less than/ equal to to include the last patch in the list?
+
+               checkPatch = _popPtr->getPatch(k); // check the patch being iterated
+
+               arrayNumMales[k] = checkPatch->size(MAL, ADLTx);  // put that number in the respective spot in the new array
+               
+               totalMales += checkPatch->size(MAL, ADLTx);  // sum up all males as we go
+               
+               numerator[k] = (checkPatch->size(MAL, ADLTx))*(breeding_kernel_sorted[k]);
+               
+               
+           }   // end for loop finding number of males per aimed patch
+           
+               // normalize mating probabilities into backwards migration rates
+                      
+           unsigned int denominator; // this is the sum of the values in the numerator
+           
+           for(unsigned int a = 0; a < lengthBreedKernel; a++) {
+              
+              denominator += numerator[a];
+              
+           }
+           
+           normalBreedKernel = numerator / denominator;  // numerator is an array, denominator is a number, make sure it divides out properly over all of them to give an array still
+           
+             // draw a random number between 0 and 1, see what patch that picks probability-wise
+             // some spots in the array will be zero, so should never be picked because there are no males there
+           
+           double pickPatch = RAND::Uniform();
+           
+           for(unsigned int sum
+
              NEED SOME SORT OF NORMALIZATION HERE? FOR HTE PROBABILITIES OF ONLY GOING TO THE PATCH WITH MALES PRESENT
              
              draw a random uniform number from 0-1
@@ -670,6 +655,11 @@ breeding_aimed_patch_matrix[0] = new TMatrix(); // tmatrix is a class defined in
           father = this->getFatherPtr(patch, mother, indexOfMother); 
 
         }
+          
+          run function getFatherPatch using matrices and rand number
+            breeding_kernel_sorted // get that focal patch's breeding window probabilities, same for everyone - THIS NEEDS TO BE CREATED SOMEWHERE
+            breeding_window patch IDs <-  row(i) breeding_aimed_patch_matrix  // get all possible patches in that focal patch's breeding window
+            
          
 
 */
