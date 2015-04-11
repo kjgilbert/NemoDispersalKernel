@@ -460,7 +460,7 @@ void LCE_Breed::execute()
     doSelfing = 0;   // set defaults
     breedWindow = 0;  
     if(_paramSet->isSet("self_if_alone")) doSelfing = 1;  // only change defaults if specified from init file
-    if(_paramSet->isSet("always_breed_window")) breedWindow = 1;
+    if(_paramSet->isSet("always_breed_window")) breedWindow = 1; 
      
     if( !checkMatingCondition(patch) ) continue; // give the focal patch to the mating condition function
     	// if no males, exit loop and continue through code
