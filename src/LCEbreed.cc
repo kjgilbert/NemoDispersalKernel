@@ -591,13 +591,14 @@ breeding_aimed_patch_matrix[0] = new TMatrix(); // tmatrix is a class defined in
 
         if(breedWindow){ // then find the other patch that the father comes from
              //  males per patch in breeding window: 
+           
            unsigned int lengthBreedKernel = sizeof(breeding_kernel_sorted) /  sizeof(breeding_kernel_sorted[0]);  // b/c all elements have the same size, this is the way to find the length, i.e. number of elements in the array
            
            unsigned int arrayNumMales[lengthBreedKernel]; // empty array to fill in number of males per patch
            unsigned int totalMales = 0;
-           unsigned int numerator[lengthBreedKernel];
-           unsigned int denominator = 0;
-           unsigned int normalBreedKernel[lengthBreedKernel];
+           double numerator[lengthBreedKernel];
+           double denominator = 0;
+           double normalBreedKernel[lengthBreedKernel];
 
            for(unsigned int k = 0; k < lengthBreedKernel; k++){ // IMPORTANT HERE, do I go to less than length, or less than/ equal to to include the last patch in the list?
 
@@ -627,24 +628,34 @@ breeding_aimed_patch_matrix[0] = new TMatrix(); // tmatrix is a class defined in
              // draw a random number between 0 and 1, see what patch that picks probability-wise
              // some spots in the array will be zero, so should never be picked because there are no males there
            
+           double sumProbs = 0;
+           double cumSums[lengthBreedKernel];
+           double total = 0;
+           
+           for(unsigned int b = 0; b < lengthBreedKernel; b++) {
+              
+              total += breeding_kernel_sorted[b];
+              cumSums[b] = total;
+           
+           }
+           
+           unsigned int c = 0;
+           unsigned int fatherPatchID;
            double pickPatch = RAND::Uniform();
            
-           for(unsigned int sum
-
-             NEED SOME SORT OF NORMALIZATION HERE? FOR HTE PROBABILITIES OF ONLY GOING TO THE PATCH WITH MALES PRESENT
-             
-             draw a random uniform number from 0-1
-               unsigned int rand = RAND::Uniform(1));  // CHECK THIS IS RIGHT?
-             find which patch that falls into
-              for(unsigned int i = 0, i < length(breedingkernelsorted), i++){
-                if(rand < breeding_kernel_sorted)
+           while(c < lengthBreedKernel) {
+           
+              if(pickPatch < cumSums[c]) {
+                 fatherPatchID = c;
+                 break;
+              } else {
+                c++;
               }
-             use that patch as the source of the father
-             
+           }
                  
-          father_patch = _popPtr->getPatch(k);
+          fatherPatch = _popPtr->getPatch(fatherPatchID);
         
-          father = this->getFatherPtr(father_patch, mother, indexOfMother);
+          father = this->getFatherPtr(fatherPatch, mother, indexOfMother);
 
         } else if(doSelfing) {  // only if I set input parameter for selfing to occur when no other mates are around
         
@@ -654,13 +665,7 @@ breeding_aimed_patch_matrix[0] = new TMatrix(); // tmatrix is a class defined in
 
           father = this->getFatherPtr(patch, mother, indexOfMother); 
 
-        }
-          
-          run function getFatherPatch using matrices and rand number
-            breeding_kernel_sorted // get that focal patch's breeding window probabilities, same for everyone - THIS NEEDS TO BE CREATED SOMEWHERE
-            breeding_window patch IDs <-  row(i) breeding_aimed_patch_matrix  // get all possible patches in that focal patch's breeding window
-            
-         
+        }         
 
 */
 // comment next line out once I get my code working above
