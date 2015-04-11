@@ -376,6 +376,45 @@ Individual* LCE_Breed_base::makeOffspring(Individual* ind)
   return ind->create(doInheritance(), true);
 }
 // ----------------------------------------------------------------------------------------
+// LCE_Breed_base::findMales      NOT WORKING, WHY? OR IS THIS THE RIGHT WAY TO TRY?
+// ----------------------------------------------------------------------------------------
+/*  bool LCE_Breed_base::findMale ()
+{
+  bool malePresent = 0;   // if no one in the focal patch, find a nearby male to mate with
+  Patch* focalPatch;
+   
+  focalPatch = _popPtr->getPatch(i);
+    
+  aimedPatchMatrix[0] = new TMatrix();       // make an empty matrix
+  _paramSet->getMatrix("breeding_aimed_patch_matrix",aimedPatchMatrix[0]);  // fill it with parameters from input file
+  aimedPatchMatrix[1] = new TMatrix(*aimedPatchMatrix[0]); // don't know what this is doing? copied from LCEdisperse.
+
+  while(malePresent = 0)     // do I need ";" here?
+  do{          // find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
+    
+    aimedList = aimedPatchMatrix[i]; // pull out the row of the matrix for the focal patch?
+    
+    for(unsigned int j = 1; j < size(aimedList), j++ ) { // j = 1 because have already checked focal patch in previous line and only continuing if no male there(spot one is j=0)
+
+      fatherPatch = _popPtr->getPatch(j); // check the next patch in the list
+        
+      if( checkMatingCondition(fatherPatch) ) { // if there IS a male in the patch being checked (checkMatCond is boolean)
+             //first patch you find with >0 males changes male_present to TRUE
+        malePresent = 1;   // then change to true, and loop should stop searching, and we proceed onward to breeding 
+        break;  // BREAK OUT OF THE FOR LOOP IF FIND ANY 1 MALE   -- maybe don't need it because of the while-do? 
+      }
+      
+    } // end for loop, if enter the if statement, should leave for loop early with malePresent = 1;
+      // if finds no males, should still have "male_present = 0" here
+  }   // end do loop
+  
+  if(!malePresent) {
+    return false;      // if found no males, return false
+  }
+  
+  return true;
+}  */
+// ----------------------------------------------------------------------------------------
 // LCE_Breed_base::breed
 // ----------------------------------------------------------------------------------------
 Individual* LCE_Breed_base::breed(Individual* mother, Individual* father, unsigned int LocalPatch)
@@ -475,13 +514,23 @@ void LCE_Breed::execute()
       malePresent = 0;           // false = 0, true = 1
       
       while(malePresent = 0)     // do I need ";" here?
-      
-      do{
-          // find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
+      do{          // find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
+
         focalPatch = _popPtr->getPatch(i);
-        
-         // find the row in the ID matrix that is for that pop
-        aimedPatchList = matrix(i);
+
+*************************
+           _DispMatrix[0] = new TMatrix();
+breeding_aimed_patch_matrix[0] = new TMatrix(); // tmatrix is a class defined in tmatrix.h, it has 3 indices? [rows][cols][length]  where length is numrows * num cols
+
+    _DispMatrix[0] = new TMatrix();
+    
+    _paramSet->getMatrix(prefix + "_matrix",_DispMatrix[0]);
+    
+    //same dispersal matrix for males and females
+    _DispMatrix[1] = new TMatrix(*_DispMatrix[0]);
+*************************
+ 
+        aimedPatchList = matrix(i);     // find the row in the ID matrix that is for that pop
         
         for(unsigned int j = 1; length(aimedPatchList), j++ ) { // j = 1 because have already checked focal patch in previous line and only continuing if no male there(spot one is j=0)
 

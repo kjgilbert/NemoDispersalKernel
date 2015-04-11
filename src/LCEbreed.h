@@ -108,6 +108,9 @@ public:
   sex_t  getOffsprgSexSelfing()                       {return FEM;}
   sex_t  getOffsprgSexCloning()                       {return FEM;}
 
+// Kim adding:
+  bool findMale ();
+
   ///@}
   /**Makes a new individual with the right parents.
      Calls IndFactory::makeNewIndividual. The sex of the offspring is determined by a call to 
