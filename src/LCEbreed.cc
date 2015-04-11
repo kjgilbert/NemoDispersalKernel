@@ -68,8 +68,8 @@ DoBreedFuncPtr(0), FecundityFuncPtr(0), CheckMatingConditionFuncPtr(0), GetOffsp
   // Kim adding parameters here now
   add_parameter("breeding_aimed_patch_matrix",MAT,false,false,0,0,updater); // this will be the patch IDs of patches to potentially look for mates in for a given patch
   add_parameter("breeding_kernel_sorted",MAT,false,false,0,0,updater); // this will be the 1-d array holding the sorted probabilities of sending gametes to patches 1 through n, and corresponding to the IDs in the above matrix.
-  add_parameter("self_if_alone", BOOL, false, false, 0, 0, upd); // ad a parameter to init file that I can set and if exists will say to self when no mates are found
-  add_parameter("always_breed_window", BOOL, false, false, 0, 0, upd); // ad a parameter to init file that I can set and if exists will say to self when no mates are found
+  add_parameter("self_if_alone", BOOL, false, false, 0, 0, updater); // ad a parameter to init file that I can set and if exists will say to self when no mates are found
+  add_parameter("always_breed_window", BOOL, false, false, 0, 0, updater); // ad a parameter to init file that I can set and if exists will say to self when no mates are found
  
 }
 // ----------------------------------------------------------------------------------------
@@ -451,15 +451,16 @@ void LCE_Breed::execute()
   //because mean fecundity can be patch-specific, we have to check whether the patch number changed
   if (_mean_fecundity->getNbCols() != _popPtr->getPatchNbr()) LCE_Breed_base::setFecundity(); // find the mother's patch's fecundity
 
-// ARE THESE IN THE RIGHT SPOT?
-    doSelfing = 0;   // set defaults
-    breedWindow = 0;  
-    if(_paramSet->isSet("self_if_alone")) doSelfing = 1;  // only change defaults if specified from init file
-    if(_paramSet->isSet("always_breed_window")) breedWindow = 1;
 
   for(unsigned int i = 0; i < _popPtr->getPatchNbr(); i++) { // which patch are we in
     
     patch = _popPtr->getPatch(i);  // current patch we're doing breeding for
+
+// ARE THESE IN THE RIGHT SPOT? might be faster if I move them out of the for loop, but if I do that, after one loop will they always stay at that value?
+    doSelfing = 0;   // set defaults
+    breedWindow = 0;  
+    if(_paramSet->isSet("self_if_alone")) doSelfing = 1;  // only change defaults if specified from init file
+    if(_paramSet->isSet("always_breed_window")) breedWindow = 1;
      
     if( !checkMatingCondition(patch) ) continue; // give the focal patch to the mating condition function
     	// if no males, exit loop and continue through code
