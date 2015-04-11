@@ -548,9 +548,8 @@ void LCE_Breed::execute()
  
  NOT WORKING:
 src/LCEbreed.cc: In member function ‘virtual void LCE_Breed::execute()’:
-src/LCEbreed.cc:520: error: ‘aimedPatchMatrix’ was not declared in this scope
-src/LCEbreed.cc:526: error: ‘aimedList’ was not declared in this scope
-src/LCEbreed.cc:528: error: ‘size’ was not declared in this scope
+src/LCEbreed.cc:518: error: ‘aimedPatchMatrix’ was not declared in this scope
+src/LCEbreed.cc:524: error: ‘aimedList’ was not declared in this scope
 src/LCEbreed.cc:543: error: expected `;' before ‘}’ token
 make: *** [src/LCEbreed.o] Error 1
     
@@ -597,7 +596,6 @@ breeding_aimed_patch_matrix[0] = new TMatrix(); // tmatrix is a class defined in
            unsigned int arrayNumMales[lengthBreedKernel]; // empty array to fill in number of males per patch
            unsigned int totalMales = 0;
            double numerator[lengthBreedKernel];
-           double denominator = 0;
            double normalBreedKernel[lengthBreedKernel];
 
            for(unsigned int k = 0; k < lengthBreedKernel; k++){ // IMPORTANT HERE, do I go to less than length, or less than/ equal to to include the last patch in the list?
@@ -614,9 +612,8 @@ breeding_aimed_patch_matrix[0] = new TMatrix(); // tmatrix is a class defined in
            }   // end for loop finding number of males per aimed patch
            
                // normalize mating probabilities into backwards migration rates
-                      
-           unsigned int denominator; // this is the sum of the values in the numerator
-           
+           double denominator = 0;
+                                 
            for(unsigned int a = 0; a < lengthBreedKernel; a++) {
               
               denominator += numerator[a];
@@ -666,6 +663,13 @@ breeding_aimed_patch_matrix[0] = new TMatrix(); // tmatrix is a class defined in
           father = this->getFatherPtr(patch, mother, indexOfMother); 
 
         }         
+
+ERRORS:
+src/LCEbreed.cc: In member function ‘virtual void LCE_Breed::execute()’:
+src/LCEbreed.cc:595: error: ‘breeding_kernel_sorted’ was not declared in this scope
+src/LCEbreed.cc:624: error: invalid operands of types ‘double [(((long unsigned int)(((long int)lengthBreedKernel) - 1)) + 1u)]’ and ‘double’ to binary ‘operator/’
+make: *** [src/LCEbreed.o] Error 1
+
 
 */
 // comment next line out once I get my code working above
