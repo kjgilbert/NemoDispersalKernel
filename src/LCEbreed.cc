@@ -499,58 +499,56 @@ void LCE_Breed::execute()
     doSelfing = 0;   // set defaults
     breedWindow = 0;  
     if(_paramSet->isSet("self_if_alone")) doSelfing = 1;  // only change defaults if specified from init file
-    if(_paramSet->isSet("always_breed_window")) breedWindow = 1; 
-     
+    if(_paramSet->isSet("always_breed_window")) breedWindow = 1;   // 
+
+//comment this out for working final version of breeding window     
     if( !checkMatingCondition(patch) ) continue; // give the focal patch to the mating condition function
     	// if no males, exit loop and continue through code
 		// this calls "checkNoSelfing" function in line 93 of this file which is defined in LCEbreed.h
 		//	checkNoSelfing returns true if it counts >0 females and >0 males in a patch 	
 /******  MY EDITED VERSION
+// below should all be uncommented once working
 
-    if( !checkMatingCondition(patch) || breedWindow) {    // if breedWindow is true (=1) then will always use the breeding window regardless of any males in focal patch
-       breedWindow = 1;           // to use below when I tell it to actually use the breeding window function, 1=true
-     
-       bool malePresent = 0;   // if no one in the focal patch, find a nearby male to mate with; false = 0, true = 1
-       Patch* focalPatch;
-   
-       focalPatch = _popPtr->getPatch(i);
-    
-       aimedPatchMatrix[0] = new TMatrix();       // make an empty matrix
-       _paramSet->getMatrix("breeding_aimed_patch_matrix",aimedPatchMatrix[0]);  // fill it with parameters from input file
-       aimedPatchMatrix[1] = new TMatrix(*aimedPatchMatrix[0]); // don't know what this is doing? copied from LCEdisperse.
+    if( !checkMatingCondition(patch) ) {    // if breedWindow is true (=1) then will always use the breeding window regardless of any males in focal patch
+		breedWindow = 1;           // to use below when I tell it to actually use the breeding window function, 1=true
 
-       do{          // find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
-    
-         aimedList = aimedPatchMatrix[i]; // pull out the row of the matrix for the focal patch?
-         
-         unsigned int lengthAimedList = sizeof(aimedList) /  sizeof(aimedList[0]);  // b/c all elements have the same size, this is the way to find the length, i.e. number of elements in the array
+		bool malePresent = 0;   // if no one in the focal patch, find a nearby male to mate with; false = 0, true = 1
+		Patch* focalPatch;
 
-         for(unsigned int j = 1; j < lengthAimedList; j++ ) { // j = 1 because have already checked focal patch in previous line and only continuing if no male there(spot one is j=0)
+		focalPatch = _popPtr->getPatch(i);
 
-           fatherPatch = _popPtr->getPatch(j); // check the next patch in the list
-        
-           if( checkMatingCondition(fatherPatch) ) { // if there IS a male in the patch being checked (checkMatCond is boolean)
-                  //first patch you find with >0 males changes male_present to TRUE
-             malePresent = 1;   // then change to true, and loop should stop searching, and we proceed onward to breeding 
-             break;  // BREAK OUT OF THE FOR LOOP IF FIND ANY 1 MALE   -- maybe don't need it because of the while-do? 
-           }
-      
-         } // end for loop, if enter the if statement, should leave for loop early with malePresent = 1;
-           // if finds no males, should still have "male_present = 0" here
-       }   // end do loop
-       while(malePresent = 0)     // do I need ";" here?
-     
-     } else if( !malePresent && !doSelfing ) {   // if no male in breeding window AND not doing selfing, continue on without breeding
+		// maybe not right? no female dispersal here, just male gametes
+*		aimedPatchMatrix[0] = new TMatrix();       // make an empty matrix
+*		_paramSet->getMatrix("breeding_aimed_patch_matrix",aimedPatchMatrix[0]);  // fill it with parameters from input file
+*		aimedPatchMatrix[1] = new TMatrix(*aimedPatchMatrix[0]); // don't know what this is doing? copied from LCEdisperse.
 
-       continue;
+		// find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
 
+*		aimedList = aimedPatchMatrix[i]; // pull out the row of the matrix for the focal patch?
+
+		//CHECK - UNSAFE because might be approximate and not have given the number of elements -- hopefully elsewhere should have this infor when the matrix is created    
+*		unsigned int lengthAimedList = sizeof(aimedList) /  sizeof(aimedList[0]);  // b/c all elements have the same size, this is the way to find the length, i.e. number of elements in the array
+
+		for(unsigned int j = 0; j < lengthAimedList; j++ ) { // j = 1 because have already checked focal patch in previous line and only continuing if no male there(spot one is j=0)
+
+			fatherPatch = _popPtr->getPatch(j); // check the next patch in the list
+
+			if( checkMatingCondition(fatherPatch) ) { // if there IS a male in the patch being checked (checkMatCond is boolean)
+					  //first patch you find with >0 males changes male_present to TRUE
+				 malePresent = 1;   // then change to true, and loop should stop searching, and we proceed onward to breeding 
+				 break;  // BREAK OUT OF THE FOR LOOP IF FIND ANY 1 MALE   -- maybe don't need it because of the while-do? 
+		     }
+
+		} // end for loop, if enter the if statement, should leave for loop early with malePresent = 1;
+		// if finds no males, should still have "male_present = 0" here
+        if( !malePresent && !doSelfing ) continue;
      }
- 
+   
+   
  NOT WORKING:
 src/LCEbreed.cc: In member function ‘virtual void LCE_Breed::execute()’:
 src/LCEbreed.cc:518: error: ‘aimedPatchMatrix’ was not declared in this scope
 src/LCEbreed.cc:524: error: ‘aimedList’ was not declared in this scope
-src/LCEbreed.cc:543: error: expected `;' before ‘}’ token
 make: *** [src/LCEbreed.o] Error 1
     
      

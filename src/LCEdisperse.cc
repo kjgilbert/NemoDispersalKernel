@@ -147,7 +147,7 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
         return false;
       }
     cout << " within parameters being set, line 149" << endl;
-    assert( 1 == 2 );  // gets here and breaks before reaching segfault
+    //assert( 1 == 2 );  // gets here and breaks before reaching segfault
     // HERE MAKE/RUN A FUNCTION TO DO MY EDITED DISPERSAL METHOD
 
      }
@@ -1186,31 +1186,33 @@ unsigned int LCE_Disperse_base::getMigrationPatchForward (sex_t SEX, unsigned in
   unsigned int AimedPatch = 0;
   
   if(random > 0.999999) random = 0.999999;//this to avoid overflows when random == 1
-cout << " just before sum line 1190" << endl;  
   
   if(_paramSet->isSet("dispersal_matrix")) {
+cout << " just before sum line 1192 in original dispersal matrix code" << endl;  
      sum = _DispMatrix[SEX]->get(LocalPatch, _reducedDispMat[SEX][LocalPatch][AimedPatch]); // FIGURE OUT THIS LINE
 
      while (random > sum) { // find the aimed patch whose probability matches that of the random number drawn, i.e. the patch that will be migrated into
         AimedPatch++; // keep going through patches
         sum += _DispMatrix[SEX]->get(LocalPatch, _reducedDispMat[SEX][LocalPatch][AimedPatch]); // increase sum until hit the patch matching the drawn random number
      }
-          cout << "finished while loop, line 1197" << endl;
+          cout << "finished while loop, line 1198" << endl;
      return _reducedDispMat[SEX][LocalPatch][AimedPatch]; // FIGURE OUT THE DETAILS OF WHAT THIS RETURNS - this must be after finding the aimed patch, returning that patch's ID? what is the sex part?
   }
   
   if(_paramSet->isSet("dispersal_aimed_patch_matrix")) {
+     cout << "enter if statement for disp kernel, line 1203" << endl;
      sum = _reducedDispMatProbs[SEX][LocalPatch][AimedPatch]; // FIGURE OUT THIS LINE
 
      while (random > sum) { // find the aimed patch whose probability matches that of the random number drawn, i.e. the patch that will be migrated into
         AimedPatch++; // keep going through patches
         sum += _reducedDispMatProbs[SEX][LocalPatch][AimedPatch]; // increase sum until hit the patch matching the drawn random number
      }
-          cout << "finished while loop, line 1197" << endl;
+          cout << "finished while loop, line 1210" << endl;
      return _reducedDispMat[SEX][LocalPatch][AimedPatch] - 1; // DOES THIS ONE NEED TO CHANGE??? to the prob matrix? why -1?
   }
     
-/*  while (random > sum) { // find the aimed patch whose probability matches that of the random number drawn, i.e. the patch that will be migrated into
+/* original code had no if statements, and this followed the sum statement:
+  while (random > sum) { // find the aimed patch whose probability matches that of the random number drawn, i.e. the patch that will be migrated into
     AimedPatch++; // keep going through patches
     sum += _DispMatrix[SEX]->get(LocalPatch, _reducedDispMat[SEX][LocalPatch][AimedPatch]); // increase sum until hit the patch matching the drawn random number
   }
