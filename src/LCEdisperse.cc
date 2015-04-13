@@ -74,8 +74,8 @@ void LCE_Disperse_base::addParameters (string prefix, ParamUpdaterBase* updater)
   add_parameter(prefix + "_rate_fem",DBL,false,true,0,1,updater);
   add_parameter(prefix + "_rate_mal",DBL,false,true,0,1,updater);
   // adding my own after here KJG:
-  add_parameter(prefix + "_aimed_patch_matrix",MAT,false,false,0,0,updater); // each row is for one patch, the ID's of the patches that migrants will go to based on probabilities in the _kernel_sorted matrix
-  add_parameter(prefix + "_kernel_sorted",MAT,false,false,0,0,updater); // this will be the 1-d array holding the sorted probabilities of dispersing to patches 1 through n, and corresponding to the x,y coordinates in the above matrix. not sure yet if I need to make one for x and one for y or if this will suffice
+  add_parameter(prefix + "_aimed_patch_matrix",MAT,false,false,0,0,updater); // each row is for one patch, the ID's of the patches that migrants will go to based on probabilities in the _kernel matrix
+  add_parameter(prefix + "_kernel",MAT,false,false,0,0,updater); // this will be the 1-d array holding the sorted probabilities of dispersing to patches 1 through n, and corresponding to the x,y coordinates in the above matrix. not sure yet if I need to make one for x and one for y or if this will suffice
 
 }
 // ----------------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
   
     _DispMatrix[0] = new TMatrix();
     
-    _paramSet->getMatrix(prefix + "_matrix",_DispMatrix[0]);
+    _paramSet->getMatrix(prefix + "_matrix",_DispMatrix[0]); // this only works for type TMatrix, i.e. a matrix that can be transposed.  param.h defines getMatrix, which "parses the matrix from the argument string, where mat dimensions and values will be reset to the values read in the init file"
     
     //same dispersal matrix for males and females
     _DispMatrix[1] = new TMatrix(*_DispMatrix[0]);
@@ -142,10 +142,11 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
  // _DispMatrix is an adress in memory
 
 	  // want to be sure then that the sorted kernel has also been given in the input file
-	  if(!_paramSet->isSet(prefix + "_kernel_sorted")) { // if not set, return error, i.e. if it is set, the ! should make it return false and not throw the error
+	  if(!_paramSet->isSet(prefix + "_kernel")) { // if not set, return error, i.e. if it is set, the ! should make it return false and not throw the error
 	    error("Dispersal rate parameters not set!\n");
         return false;
       }
+    cout << " within parameters being set, line 149" << endl;
     assert( 1 == 2 );  // gets here and breaks before reaching segfault
     // HERE MAKE/RUN A FUNCTION TO DO MY EDITED DISPERSAL METHOD
 
@@ -1186,15 +1187,38 @@ unsigned int LCE_Disperse_base::getMigrationPatchForward (sex_t SEX, unsigned in
   
   if(random > 0.999999) random = 0.999999;//this to avoid overflows when random == 1
 cout << " just before sum line 1190" << endl;  
-  sum = _DispMatrix[SEX]->get(LocalPatch, _reducedDispMat[SEX][LocalPatch][AimedPatch]); // FIGURE OUT THIS LINE
+  
+  if(_paramSet->isSet("dispersal_matrix")) {
+     sum = _DispMatrix[SEX]->get(LocalPatch, _reducedDispMat[SEX][LocalPatch][AimedPatch]); // FIGURE OUT THIS LINE
 
-  while (random > sum) { // find the aimed patch whose probability matches that of the random number drawn, i.e. the patch that will be migrated into
+     while (random > sum) { // find the aimed patch whose probability matches that of the random number drawn, i.e. the patch that will be migrated into
+        AimedPatch++; // keep going through patches
+        sum += _DispMatrix[SEX]->get(LocalPatch, _reducedDispMat[SEX][LocalPatch][AimedPatch]); // increase sum until hit the patch matching the drawn random number
+     }
+          cout << "finished while loop, line 1197" << endl;
+     return _reducedDispMat[SEX][LocalPatch][AimedPatch]; // FIGURE OUT THE DETAILS OF WHAT THIS RETURNS - this must be after finding the aimed patch, returning that patch's ID? what is the sex part?
+  }
+  
+  if(_paramSet->isSet("dispersal_aimed_patch_matrix")) {
+     sum = _reducedDispMatProbs[SEX][LocalPatch][AimedPatch]; // FIGURE OUT THIS LINE
+
+     while (random > sum) { // find the aimed patch whose probability matches that of the random number drawn, i.e. the patch that will be migrated into
+        AimedPatch++; // keep going through patches
+        sum += _reducedDispMatProbs[SEX][LocalPatch][AimedPatch]; // increase sum until hit the patch matching the drawn random number
+     }
+          cout << "finished while loop, line 1197" << endl;
+     return _reducedDispMat[SEX][LocalPatch][AimedPatch] - 1; // DOES THIS ONE NEED TO CHANGE??? to the prob matrix? why -1?
+  }
+    
+/*  while (random > sum) { // find the aimed patch whose probability matches that of the random number drawn, i.e. the patch that will be migrated into
     AimedPatch++; // keep going through patches
     sum += _DispMatrix[SEX]->get(LocalPatch, _reducedDispMat[SEX][LocalPatch][AimedPatch]); // increase sum until hit the patch matching the drawn random number
   }
 cout << "finished while loop, line 1197" << endl;
   return _reducedDispMat[SEX][LocalPatch][AimedPatch]; // FIGURE OUT THE DETAILS OF WHAT THIS RETURNS - this must be after finding the aimed patch, returning that patch's ID? what is the sex part?
+*/
 }
+
 // ----------------------------------------------------------------------------------------
 // LCE_Disperse_base::Migrate Backward
 // ----------------------------------------------------------------------------------------
