@@ -536,7 +536,7 @@ void LCE_Breed::execute()
 			if( checkMatingCondition(fatherPatch) ) { // if there IS a male in the patch being checked (checkMatCond is boolean)
 					  //first patch you find with >0 males changes male_present to TRUE
 				 malePresent = 1;   // then change to true, and loop should stop searching, and we proceed onward to breeding 
-				 break;  // BREAK OUT OF THE FOR LOOP IF FIND ANY 1 MALE   -- maybe don't need it because of the while-do? 
+				 break;  // BREAK OUT OF THE FOR LOOP IF FIND ANY 1 MALE 
 		     }
 
 		} // end for loop, if enter the if statement, should leave for loop early with malePresent = 1;
