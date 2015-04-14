@@ -99,9 +99,6 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
   }
   
   if(_paramSet->isSet(prefix + "_matrix")) { // set normal dispersal matrix here if meet criteria
-    cout << "line 104, should NOT get here with AIMED dispersal_matrix" << endl;
-    cout << "dispersal_matrix = " << _paramSet->isSet(prefix + "_matrix") << endl;
-    cout << "aimed matrix = " << _paramSet->isSet(prefix + "_connectivity_matrix") << endl;
   
     _DispMatrix[0] = new TMatrix();
     
@@ -129,9 +126,6 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
 		}
 	
 		if(_paramSet->isSet(prefix + "_connectivity_matrix")) { // this is true if the input includes the xy coordinate matrix
-		cout << "line 134, should get here with AIMED dispersal_matrix" << endl;
-		cout << "dispersal_matrix = " << _paramSet->isSet(prefix + "_matrix") << endl;
-		cout << "aimed matrix = " << _paramSet->isSet(prefix + "_connectivity_matrix") << endl;
 
 		  _DispMatrix[0] = new TMatrix();
 	
@@ -146,10 +140,7 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
 			error("Dispersal rate parameters not set!\n");
 			return false;
 		  }
-		  cout << " within parameters being set, line 149" << endl;
-		  //assert( 1 == 2 );  // gets here and breaks before reaching segfault
-		  // HERE MAKE/RUN A FUNCTION TO DO MY EDITED DISPERSAL METHOD
-
+		
 		 }
 	}  
 
@@ -157,9 +148,6 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
   if( _paramSet->isSet(prefix + "_matrix") || 
      ( _paramSet->isSet(prefix + "_matrix_fem") && _paramSet->isSet(prefix + "_matrix_mal") )  ) 
   {
-	cout << "line 161, should NOT get here with AIMED dispersal_matrix" << endl;
-    cout << "dispersal_matrix = " << _paramSet->isSet(prefix + "_matrix") << endl;
-    cout << "aimed matrix = " << _paramSet->isSet(prefix + "_connectivity_matrix") << endl;
 
     if(  ( _paramSet->isSet(prefix + "_rate") ||
           (_paramSet->isSet(prefix + "_rate_fem") &&  _paramSet->isSet(prefix + "_rate_mal")) )
@@ -196,30 +184,24 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
         if(!checkBackwardDispersalMatrix(_DispMatrix[MAL])) return false;
       }
     }
-cout << "line 199" << endl;
+
     setReducedDispMatrix(); // calls on setReducedDispMatrix once has read in all matrices so it can order patches for optimal searching rather than searching all despite order of probabilities
     
   } else if(_paramSet->isSet(prefix + "_connectivity_matrix")) {
- 	cout << "line 204, should get here with AIMED dispersal_matrix" << endl;
-    cout << "dispersal_matrix = " << _paramSet->isSet(prefix + "_matrix") << endl;
-    cout << "aimed matrix = " << _paramSet->isSet(prefix + "_connectivity_matrix") << endl;
-      
+ 
      if(  ( _paramSet->isSet(prefix + "_rate") ||
           (_paramSet->isSet(prefix + "_rate_fem") &&  _paramSet->isSet(prefix + "_rate_mal")) )
-       || _paramSet->isSet(prefix + "_model") )
+       || _paramSet->isSet(prefix + "_model") ) {
       warning("parameter \"dispersal_matrix\" takes precedence over parameters \"dispersal_rate\" and \"dispersal_model\"\n");
-    
+    }
+
     _disp_model = 0;
-     
+ 
      // NEED TO SET CONTENTS OF THE MATRIX HERE, as in previous if statement
     setAimedDispMatrix(); // calls on setReducedDispMatrix once has read in all matrices so it can order patches for optimal searching rather than searching all despite order of probabilities
-  
+
   } else {
   
-   	cout << "line 219, should NOT get here with AIMED dispersal_matrix" << endl;
-    cout << "dispersal_matrix = " << _paramSet->isSet(prefix + "_matrix") << endl;
-    cout << "aimed matrix = " << _paramSet->isSet(prefix + "_connectivity_matrix") << endl;
-
     if(!_paramSet->isSet(prefix + "_model")) {
       error("Dispersal model not set!\n");
       return false;
@@ -441,10 +423,10 @@ bool LCE_Disperse_base::setDispMatrix ()
   }
   
   if(_paramSet->isSet("dispersal_connectivity_matrix") ) { // can't use prefix here because in a different function that doesn't recognize them
-    cout << "line 443" << endl;
+
     return setAimedDispMatrix(); // go to my new function?
   } else {
-    cout << "line 446" << endl;
+
     return setReducedDispMatrix(); //  call on reduced disp matrix here if none of the other dispersal models has been set
   } 
 }
@@ -1005,8 +987,10 @@ bool LCE_Disperse_base::setAimedDispMatrix()
   unsigned int border_model = (unsigned int)get_parameter_value(_prefix + "_border_model");
   unsigned int num_patch = (border_model == 3 ? _npatch + 1 : _npatch);
 
-  cout << "test new function \n";
-
+  cout << "in setAimedDispMatrix line 990" << endl;
+  cout <<  _DispMatrix << endl;
+  cout <<  _reducedDispMat << endl;
+  cout <<  _reducedDispMatProbs << endl; // these are addresses in memory
   //multimap automatically orders the key values in ascending order
   multimap<double, unsigned int> ordered_rates_fem, ordered_rates_mal;
   
