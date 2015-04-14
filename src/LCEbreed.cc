@@ -377,45 +377,6 @@ Individual* LCE_Breed_base::makeOffspring(Individual* ind)
   return ind->create(doInheritance(), true);
 }
 // ----------------------------------------------------------------------------------------
-// LCE_Breed_base::findMales      NOT WORKING, WHY? OR IS THIS THE RIGHT WAY TO TRY?
-// ----------------------------------------------------------------------------------------
-/*  bool LCE_Breed_base::findMale ()
-{
-  bool malePresent = 0;   // if no one in the focal patch, find a nearby male to mate with
-  Patch* focalPatch;
-   
-  focalPatch = _popPtr->getPatch(i);
-    
-  aimedPatchMatrix[0] = new TMatrix();       // make an empty matrix
-  _paramSet->getMatrix("breeding_connectivity_matrix",aimedPatchMatrix[0]);  // fill it with parameters from input file
-  aimedPatchMatrix[1] = new TMatrix(*aimedPatchMatrix[0]); // don't know what this is doing? copied from LCEdisperse.
-
-  while(malePresent = 0)     // do I need ";" here?
-  do{          // find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
-    
-    aimedList = aimedPatchMatrix[i]; // pull out the row of the matrix for the focal patch?
-    
-    for(unsigned int j = 1; j < size(aimedList), j++ ) { // j = 1 because have already checked focal patch in previous line and only continuing if no male there(spot one is j=0)
-
-      fatherPatch = _popPtr->getPatch(j); // check the next patch in the list
-        
-      if( checkMatingCondition(fatherPatch) ) { // if there IS a male in the patch being checked (checkMatCond is boolean)
-             //first patch you find with >0 males changes male_present to TRUE
-        malePresent = 1;   // then change to true, and loop should stop searching, and we proceed onward to breeding 
-        break;  // BREAK OUT OF THE FOR LOOP IF FIND ANY 1 MALE   -- maybe don't need it because of the while-do? 
-      }
-      
-    } // end for loop, if enter the if statement, should leave for loop early with malePresent = 1;
-      // if finds no males, should still have "male_present = 0" here
-  }   // end do loop
-  
-  if(!malePresent) {
-    return false;      // if found no males, return false
-  }
-  
-  return true;
-}  */
-// ----------------------------------------------------------------------------------------
 // LCE_Breed_base::breed
 // ----------------------------------------------------------------------------------------
 Individual* LCE_Breed_base::breed(Individual* mother, Individual* father, unsigned int LocalPatch)
@@ -474,10 +435,10 @@ void LCE_Breed::execute()
   // Kim adding following params
   bool malePresent; // don't necessarily need this here if I create it with the declaration at the same time below
   bool breedWindow;
+  bool doSelfing;
   Patch* fatherPatch;
   Patch* checkPatch;
   Patch* focalPatch;
-  bool doSelfing;
   
 #ifdef _DEBUG_
   message("LCE_Breed::execute (Patch nb: %i offsprg nb: %i adlt nb: %i)\n"
@@ -506,6 +467,11 @@ void LCE_Breed::execute()
     	// if no males and we never want to use the breeding window and we're not allowing selfing, nemo behaves like the old version and exits loop and continue through code
 		// this calls "checkNoSelfing" function in line 93 of this file which is defined in LCEbreed.h
 		//	checkNoSelfing returns true if it counts >0 females and >0 males in a patch 	
+
+    get_parameter("breeding_connectivity_matrix")->getVariableMatrix(&_reducedBreedMat[0]);
+
+    get_parameter("breeding_kernel")->getVariableMatrix(&_reducedBreedMatProbs[0]);
+
 /******  MY EDITED VERSION
 // below should all be uncommented once working
 

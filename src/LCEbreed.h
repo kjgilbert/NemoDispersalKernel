@@ -108,6 +108,10 @@ public:
   sex_t  getOffsprgSexSelfing()                       {return FEM;}
   sex_t  getOffsprgSexCloning()                       {return FEM;}
 
+
+  vector< vector<double> > _reducedBreedMat[1];        // these are for the breeding window connectivity matrices and probabilities
+  vector< vector<double> > _reducedBreedMatProbs[1];
+
   ///@}
   /**Makes a new individual with the right parents.
      Calls IndFactory::makeNewIndividual. The sex of the offspring is determined by a call to 
