@@ -452,6 +452,14 @@ void LCE_Breed::execute()
   //because mean fecundity can be patch-specific, we have to check whether the patch number changed
   if (_mean_fecundity->getNbCols() != _popPtr->getPatchNbr()) LCE_Breed_base::setFecundity(); // find the mother's patch's fecundity
 
+  // ----------------------------------------------------------------------------------------
+  // Set breeding window parameters, WITHIN the breed execute function
+  if(_paramSet->isSet("breeding_connectivity_matrix") && _paramSet->isSet("breeding_kernel")){
+      get_parameter("breeding_connectivity_matrix")->getVariableMatrix(&_reducedBreedMat[0]); // make the matrix
+      get_parameter("breeding_kernel")->getVariableMatrix(&_reducedBreedMatProbs[0]);  
+  }
+  // ----------------------------------------------------------------------------------------
+
 
   for(unsigned int i = 0; i < _popPtr->getPatchNbr(); i++) { // which patch are we in
     
@@ -493,11 +501,10 @@ cout << lengthAimedList << endl;
 		// _reducedBreedMat has the IDs
 		// _reducedBreedMatProbs has the probabilities
 
-		get_parameter("breeding_connectivity_matrix")->getVariableMatrix(&_reducedBreedMat[0]);       // make the matrix
 
 		// find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
 
-		_reducedBreedMat[0][i]; // pull out the row of the matrix for the focal patch?
+		_reducedBreedMat[0][i]; // pull out the row of the matrix for the focal patch
 
 		unsigned int lengthAimedList = _reducedBreedMat[0][i].size();   // gives the length of a row in the matrix
 
@@ -529,7 +536,13 @@ cout << lengthAimedList << endl;
       cnt += nbBaby;
       //-----------------------------------------------------------------------
       while(nbBaby != 0) {
-        
+      
+      
+      
+ 		   _reducedBreedMatProbs[0][i]; // pull out the row of the matrix for the focal patch
+
+      cout << _reducedBreedMatProbs[0].size() << endl; // gives the length of one rows, i.e. the breeding kernel because it is a matrix with only one row
+      
       // if we have reached this point, then we know there will be at least one male in at least one patch within the breeding kernel or that selfing will occur
       // want to implement "backwards migration" here to then correctly and randomly find the male that becomes the father
          // will have to on the fly convert the forward migration matrix input from the init file into the appropriate backwards migration matrix
@@ -541,17 +554,27 @@ cout << lengthAimedList << endl;
         if(breedWindow){ // then find the other patch that the father comes from
              //  males per patch in breeding window: 
            
-  ** sizeof ....         unsigned int lengthBreedKernel = sizeof(breeding_kernel) /  sizeof(breeding_kernel[0]);  // b/c all elements have the same size, this is the way to find the length, i.e. number of elements in the array
+//  ** sizeof ....         unsigned int lengthBreedKernel = sizeof(breeding_kernel) /  sizeof(breeding_kernel[0]);  // b/c all elements have the same size, this is the way to find the length, i.e. number of elements in the array
        // NEW things here    
- *          unsigned int arrayNumMales[lengthBreedKernel]; // empty array to fill in number of males per patch
- *          double numerator[lengthBreedKernel];
- *          double normalBreedKernel[lengthBreedKernel];
+ *          
+ 
+ 
+            unsigned int arrayNumMales[lengthAimedList]; // empty array to fill in number of males per patch
+
+ 
+ *          double numerator[lengthAimedList];
+ *          double normalBreedKernel[lengthAimedList];
+            
+            
+            get_parameter("breeding_kernel")->getVariableMatrix(&_reducedBreedMatProbs[0]);
+ 		    _reducedBreedMatProbs[0][i]; // pull out the row of the matrix for the focal patch
+
 *		aimedList = aimedPatchMatrix[i]; // pull out the row of IDS (NOT PROB) the matrix for the focal patch
   // normalize mating probabilities into backwards migration rates
            double denominator = 0;
 
 
-           for(unsigned int k = 0; k < lengthBreedKernel; k++){ 
+           for(unsigned int k = 0; k < lengthAimedList; k++){ // lengthAimedList is the same length as the breeding window
 
                checkPatch = _popPtr->getPatch(aimedList[k]); // check the patch being iterated - this should be the patch's ID number relative to the whole landscape
 
