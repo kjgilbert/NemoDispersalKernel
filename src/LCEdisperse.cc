@@ -112,46 +112,46 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
 
 	} else { //continue onto next line of original code to do sex-specific dispersal matrices
     
-    if(_paramSet->isSet(prefix + "_matrix_fem")) {
-      
-      _DispMatrix[FEM] = new TMatrix();
-      
-      _paramSet->getMatrix(prefix + "_matrix_fem",_DispMatrix[FEM]);
+		if(_paramSet->isSet(prefix + "_matrix_fem")) {
+	  
+		  _DispMatrix[FEM] = new TMatrix();
+	  
+		  _paramSet->getMatrix(prefix + "_matrix_fem",_DispMatrix[FEM]);
 
-    }
-    
-    if(_paramSet->isSet(prefix + "_matrix_mal")) {
-      
-      _DispMatrix[MAL] = new TMatrix();
-      
-      _paramSet->getMatrix(prefix + "_matrix_mal",_DispMatrix[MAL]);
+		}
+	
+		if(_paramSet->isSet(prefix + "_matrix_mal")) {
+	  
+		  _DispMatrix[MAL] = new TMatrix();
+	  
+		  _paramSet->getMatrix(prefix + "_matrix_mal",_DispMatrix[MAL]);
 
-    }
-    
-    if(_paramSet->isSet(prefix + "_connectivity_matrix")) { // this is true if the input includes the xy coordinate matrix
-	cout << "line 134, should get here with AIMED dispersal_matrix" << endl;
-    cout << "dispersal_matrix = " << _paramSet->isSet(prefix + "_matrix") << endl;
-    cout << "aimed matrix = " << _paramSet->isSet(prefix + "_connectivity_matrix") << endl;
+		}
+	
+		if(_paramSet->isSet(prefix + "_connectivity_matrix")) { // this is true if the input includes the xy coordinate matrix
+		cout << "line 134, should get here with AIMED dispersal_matrix" << endl;
+		cout << "dispersal_matrix = " << _paramSet->isSet(prefix + "_matrix") << endl;
+		cout << "aimed matrix = " << _paramSet->isSet(prefix + "_connectivity_matrix") << endl;
 
-	  _DispMatrix[0] = new TMatrix();
-    
-      _paramSet->getMatrix(prefix + "_connectivity_matrix",_DispMatrix[0]);
-    
-      //same dispersal matrix for males and females
-      _DispMatrix[1] = new TMatrix(*_DispMatrix[0]);
- // _DispMatrix is an adress in memory
+		  _DispMatrix[0] = new TMatrix();
+	
+		  _paramSet->getMatrix(prefix + "_connectivity_matrix",_DispMatrix[0]);
+	
+		  //same dispersal matrix for males and females
+		  _DispMatrix[1] = new TMatrix(*_DispMatrix[0]);
+	      // _DispMatrix is an adress in memory
 
-	  // want to be sure then that the sorted kernel has also been given in the input file
-	  if(!_paramSet->isSet(prefix + "_kernel")) { // if not set, return error, i.e. if it is set, the ! should make it return false and not throw the error
-	    error("Dispersal rate parameters not set!\n");
-        return false;
-      }
-    cout << " within parameters being set, line 149" << endl;
-    //assert( 1 == 2 );  // gets here and breaks before reaching segfault
-    // HERE MAKE/RUN A FUNCTION TO DO MY EDITED DISPERSAL METHOD
+		  // want to be sure then that the sorted kernel has also been given in the input file
+		  if(!_paramSet->isSet(prefix + "_kernel")) { // if not set, return error, i.e. if it is set, the ! should make it return false and not throw the error
+			error("Dispersal rate parameters not set!\n");
+			return false;
+		  }
+		  cout << " within parameters being set, line 149" << endl;
+		  //assert( 1 == 2 );  // gets here and breaks before reaching segfault
+		  // HERE MAKE/RUN A FUNCTION TO DO MY EDITED DISPERSAL METHOD
 
-     }
-  }  
+		 }
+	}  
 
 // below code sends to setReducedDispMatrix, don't want that for my edits, return to original state:
   if( _paramSet->isSet(prefix + "_matrix") || 
@@ -212,7 +212,8 @@ cout << "line 199" << endl;
     _disp_model = 0;
      
      // NEED TO SET CONTENTS OF THE MATRIX HERE, as in previous if statement
-       
+    setAimedDispMatrix(); // calls on setReducedDispMatrix once has read in all matrices so it can order patches for optimal searching rather than searching all despite order of probabilities
+  
   } else {
   
    	cout << "line 219, should NOT get here with AIMED dispersal_matrix" << endl;
