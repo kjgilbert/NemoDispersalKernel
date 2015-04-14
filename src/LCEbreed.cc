@@ -468,11 +468,18 @@ void LCE_Breed::execute()
 		// this calls "checkNoSelfing" function in line 93 of this file which is defined in LCEbreed.h
 		//	checkNoSelfing returns true if it counts >0 females and >0 males in a patch 	
 
-    get_parameter("breeding_connectivity_matrix")->getVariableMatrix(&_reducedBreedMat[0]);
-
+/*    get_parameter("breeding_connectivity_matrix")->getVariableMatrix(&_reducedBreedMat[0]);
     get_parameter("breeding_kernel")->getVariableMatrix(&_reducedBreedMatProbs[0]);
 
-/******  MY EDITED VERSION
+    cout << _reducedBreedMat[0].size() << endl; // gives the number of rows in the matrix
+    cout << _reducedBreedMat[0][0].size() << endl; // gives the length of a row in the matrix
+ //   cout << i << endl;
+    
+unsigned int lengthAimedList = _reducedBreedMat[0][i].size();   // gives the length of a row in the matrix
+
+cout << lengthAimedList << endl;
+*/	   
+//******  MY EDITED VERSION
 // below should all be uncommented once working
 
     if( !checkMatingCondition(patch) ) {    // if breedWindow is true (=1) then will always use the breeding window regardless of any males in focal patch
@@ -482,18 +489,17 @@ void LCE_Breed::execute()
 		Patch* focalPatch;
 
 		focalPatch = _popPtr->getPatch(i);
+		
+		// _reducedBreedMat has the IDs
+		// _reducedBreedMatProbs has the probabilities
 
-		// maybe not right? no female dispersal here, just male gametes
-*		aimedPatchMatrix[0] = new TMatrix();       // make an empty matrix
-*		_paramSet->getMatrix("breeding_connectivity_matrix",aimedPatchMatrix[0]);  // fill it with parameters from input file
-*		aimedPatchMatrix[1] = new TMatrix(*aimedPatchMatrix[0]); // don't know what this is doing? copied from LCEdisperse.
+		get_parameter("breeding_connectivity_matrix")->getVariableMatrix(&_reducedBreedMat[0]);       // make the matrix
 
 		// find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
 
-*		aimedList = aimedPatchMatrix[i]; // pull out the row of the matrix for the focal patch?
+		_reducedBreedMat[0][i]; // pull out the row of the matrix for the focal patch?
 
-		//CHECK - UNSAFE because might be approximate and not have given the number of elements -- hopefully elsewhere should have this infor when the matrix is created    
-*		unsigned int lengthAimedList = sizeof(aimedList) /  sizeof(aimedList[0]);  // b/c all elements have the same size, this is the way to find the length, i.e. number of elements in the array
+		unsigned int lengthAimedList = _reducedBreedMat[0][i].size();   // gives the length of a row in the matrix
 
 		for(unsigned int j = 0; j < lengthAimedList; j++ ) { // j = 1 because have already checked focal patch in previous line and only continuing if no male there(spot one is j=0)
 
@@ -510,7 +516,7 @@ void LCE_Breed::execute()
         if( !malePresent && !doSelfing ) continue;
      }
  
-*/
+
     
     unsigned int cnt =0;
     for(unsigned int size = patch->size(FEM, ADLTx), indexOfMother = 0;

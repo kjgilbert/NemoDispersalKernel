@@ -109,9 +109,6 @@ public:
   sex_t  getOffsprgSexCloning()                       {return FEM;}
 
 
-  vector< vector<double> > _reducedBreedMat[1];        // these are for the breeding window connectivity matrices and probabilities
-  vector< vector<double> > _reducedBreedMatProbs[1];
-
   ///@}
   /**Makes a new individual with the right parents.
      Calls IndFactory::makeNewIndividual. The sex of the offspring is determined by a call to 
@@ -371,6 +368,10 @@ public:
   virtual age_t removeAgeClass ( ) {return 0;}
   virtual age_t addAgeClass ( ) {return OFFSPRG;}
   virtual age_t requiredAgeClass () {return ADULTS;}
+  
+  vector< vector<double> > _reducedBreedMat[1];        // these are for the breeding window connectivity matrices and probabilities
+  vector< vector<double> > _reducedBreedMatProbs[1];
+
   ///@}
 };
 
