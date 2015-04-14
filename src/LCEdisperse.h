@@ -50,9 +50,10 @@ class LCE_Disperse_base: public virtual LifeCycleEvent
   
   vector< vector<unsigned int> > _reducedDispMat[2];
 
-  vector< vector<unsigned int> > _reducedDispMatProbs[2]; // Kim adding, this is the new matrix that can have rows of different sizes, i.e. is not a TMatrix
+  vector< vector<double> > _reducedDispMatProbs[2]; // Kim adding, this is the new matrix that can have rows of different sizes, i.e. is not a TMatrix
     // this should hold the dispersal probabilities of the patches in the kernel -- sum of the row must be 1. check with Fred b/c I want to make this just be 1 row, not same num rows as patches
-  
+    // can it just be a 1-d vector?
+    
   string _prefix;
   
   friend class LCE_Disperse_ConstDisp;

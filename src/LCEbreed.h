@@ -108,9 +108,6 @@ public:
   sex_t  getOffsprgSexSelfing()                       {return FEM;}
   sex_t  getOffsprgSexCloning()                       {return FEM;}
 
-// Kim adding:
-  bool findMale ();
-
   ///@}
   /**Makes a new individual with the right parents.
      Calls IndFactory::makeNewIndividual. The sex of the offspring is determined by a call to 
@@ -162,25 +159,6 @@ public:
   {
     return (this->* CheckMatingConditionFuncPtr) (thePatch);
   }
-  
-  
-//****************************************************************************
-/**
-	I AM ADDING CODE HERE - KJG
-	I think this spot should work okay because where I am adding the code in breed.cc is right next to the above function.
-	...though these are all boolean, so not sure if there is anything important to do with classes there? :/
-**/
-  
-/*  
-    bool checkMatingCondition (Patch* thePatch)
-  {
-    return (this->* CheckMatingConditionFuncPtr) (thePatch);
-  }
- */ 
-  
-  
-//****************************************************************************
-
   
   /**Checks whether mating will take place in the current patch when mating is not selfing or cloning.
      Males and females must be present in the patch for mating to occur.

@@ -70,6 +70,7 @@ DoBreedFuncPtr(0), FecundityFuncPtr(0), CheckMatingConditionFuncPtr(0), GetOffsp
   add_parameter("breeding_kernel_sorted",MAT,false,false,0,0,updater); // this will be the 1-d array holding the sorted probabilities of sending gametes to patches 1 through n, and corresponding to the IDs in the above matrix.
   add_parameter("self_if_alone", BOOL, false, false, 0, 0, updater); // ad a parameter to init file that I can set and if exists will say to self when no mates are found
   add_parameter("always_breed_window", BOOL, false, false, 0, 0, updater); // ad a parameter to init file that I can set and if exists will say to self when no mates are found
+  add_parameter("never_breed_window", BOOL, false, false, 0, 0, updater); // ad a parameter to init file that I can set and if exists will say to self when no mates are found
  
 }
 // ----------------------------------------------------------------------------------------
@@ -501,9 +502,8 @@ void LCE_Breed::execute()
     if(_paramSet->isSet("self_if_alone")) doSelfing = 1;  // only change defaults if specified from init file
     if(_paramSet->isSet("always_breed_window")) breedWindow = 1;   // 
 
-//comment this out for working final version of breeding window     
-    if( !checkMatingCondition(patch) ) continue; // give the focal patch to the mating condition function
-    	// if no males, exit loop and continue through code
+    if( (_paramSet->isSet("never_breed_window")) && !checkMatingCondition(patch) && !doSelfing) continue;
+    	// if no males and we never want to use the breeding window and we're not allowing selfing, nemo behaves like the old version and exits loop and continue through code
 		// this calls "checkNoSelfing" function in line 93 of this file which is defined in LCEbreed.h
 		//	checkNoSelfing returns true if it counts >0 females and >0 males in a patch 	
 /******  MY EDITED VERSION
@@ -543,26 +543,6 @@ void LCE_Breed::execute()
 		// if finds no males, should still have "male_present = 0" here
         if( !malePresent && !doSelfing ) continue;
      }
-   
-   
- NOT WORKING:
-src/LCEbreed.cc: In member function ‘virtual void LCE_Breed::execute()’:
-src/LCEbreed.cc:518: error: ‘aimedPatchMatrix’ was not declared in this scope
-src/LCEbreed.cc:524: error: ‘aimedList’ was not declared in this scope
-make: *** [src/LCEbreed.o] Error 1
-    
-     
-     
-need to figure out 
-	how to do the matrix
-	how to do the while loop properly
-	how to find the size of the matrix
-     
-     
-     
-*************************
-breeding_aimed_patch_matrix[0] = new TMatrix(); // tmatrix is a class defined in tmatrix.h, it has 3 indices? [rows][cols][length]  where length is numrows * num cols
-*************************
  
 */
     
@@ -589,36 +569,37 @@ breeding_aimed_patch_matrix[0] = new TMatrix(); // tmatrix is a class defined in
         if(breedWindow){ // then find the other patch that the father comes from
              //  males per patch in breeding window: 
            
-           unsigned int lengthBreedKernel = sizeof(breeding_kernel_sorted) /  sizeof(breeding_kernel_sorted[0]);  // b/c all elements have the same size, this is the way to find the length, i.e. number of elements in the array
-           
-           unsigned int arrayNumMales[lengthBreedKernel]; // empty array to fill in number of males per patch
-           unsigned int totalMales = 0;
-           double numerator[lengthBreedKernel];
-           double normalBreedKernel[lengthBreedKernel];
+  ** sizeof ....         unsigned int lengthBreedKernel = sizeof(breeding_kernel_sorted) /  sizeof(breeding_kernel_sorted[0]);  // b/c all elements have the same size, this is the way to find the length, i.e. number of elements in the array
+       // NEW things here    
+ *          unsigned int arrayNumMales[lengthBreedKernel]; // empty array to fill in number of males per patch
+ *          double numerator[lengthBreedKernel];
+ *          double normalBreedKernel[lengthBreedKernel];
+*		aimedList = aimedPatchMatrix[i]; // pull out the row of IDS (NOT PROB) the matrix for the focal patch
+  // normalize mating probabilities into backwards migration rates
+           double denominator = 0;
 
-           for(unsigned int k = 0; k < lengthBreedKernel; k++){ // IMPORTANT HERE, do I go to less than length, or less than/ equal to to include the last patch in the list?
 
-               checkPatch = _popPtr->getPatch(k); // check the patch being iterated
+           for(unsigned int k = 0; k < lengthBreedKernel; k++){ 
+
+               checkPatch = _popPtr->getPatch(aimedList[k]); // check the patch being iterated - this should be the patch's ID number relative to the whole landscape
 
                arrayNumMales[k] = checkPatch->size(MAL, ADLTx);  // put that number in the respective spot in the new array
+                              
+               numerator[k] = (checkPatch->size(MAL, ADLTx))*(breeding_kernel_sorted[aimedList[k]]);
                
-               totalMales += checkPatch->size(MAL, ADLTx);  // sum up all males as we go
-               
-               numerator[k] = (checkPatch->size(MAL, ADLTx))*(breeding_kernel_sorted[k]);
+               denominator += numerator[k];
                
                
            }   // end for loop finding number of males per aimed patch
            
-               // normalize mating probabilities into backwards migration rates
-           double denominator = 0;
                                  
-           for(unsigned int a = 0; a < lengthBreedKernel; a++) {
-              
-              denominator += numerator[a];
-              
-           }
+          // have to iterate through to divide an array by a single number
+           for(unsigned int k = 0; k < lengthBreedKernel; k++){ 
+            
+             normalBreedKernel[k] = numerator[k] / denominator;  // numerator is an array, denominator is a number
            
-           normalBreedKernel = numerator / denominator;  // numerator is an array, denominator is a number, make sure it divides out properly over all of them to give an array still
+           }
+
            
              // draw a random number between 0 and 1, see what patch that picks probability-wise
              // some spots in the array will be zero, so should never be picked because there are no males there
@@ -627,55 +608,52 @@ breeding_aimed_patch_matrix[0] = new TMatrix(); // tmatrix is a class defined in
            double cumSums[lengthBreedKernel];
            double total = 0;
            
-           for(unsigned int b = 0; b < lengthBreedKernel; b++) {
+           for(unsigned int k = 0; k < lengthBreedKernel; k++) {
               
-              total += breeding_kernel_sorted[b];
-              cumSums[b] = total;
+              total += breeding_kernel_sorted[k];
+              cumSums[k] = total;
            
            }
            
            unsigned int c = 0;
            unsigned int fatherPatchID;
-           double pickPatch = RAND::Uniform();
+           double randNum = RAND::Uniform();  // maybe check that this isn't the default rand num generator, but is instead one made for nemo 
            
            while(c < lengthBreedKernel) {
            
-              if(pickPatch < cumSums[c]) {
-                 fatherPatchID = c;
-                 break;
-              } else {
-                c++;
-              }
+              if(randNum < cumSums[c]) {
+                 fatherPatchID = aimedList[c]; // to get the universal patch ID
+                 break; // this breaks out of the whole while loop, c won't iterate up
+              } 
+              c++;
            }
-                 
+           
+           assert(c < lengthBreedKernel); // if somehow the function above doesn't work, this means it didn't find a box with the probability matching the rand number and c became greater than length of disp kernel      
+               // if this happens, probably when one patch has super high prob vs others, and in that case cn add code to fix because that patch is probably the one to choose from
+ 
           fatherPatch = _popPtr->getPatch(fatherPatchID);
         
           father = this->getFatherPtr(fatherPatch, mother, indexOfMother);
 
-        } else if(doSelfing) {  // only if I set input parameter for selfing to occur when no other mates are around
-        
-          father = mother;
+// end of if, DELETE THINGS HERE          
           
         } else { // get the father from the focal patch - will not reach here if no selfing and no male present in focal patch
+        
+          // breeding window is not happening, = 0, one of 2 things happens, normal nemo with a male in the patch, or if no male then we self
 
-          father = this->getFatherPtr(patch, mother, indexOfMother); 
+            // focal patch has male, proceed with normal nemo:
+          if( checkMatingCondition(patch) ) father = this->getFatherPtr(patch, mother, indexOfMother); // if there was a focal patch male, normal nemo mating within patch
+          else if(doSelfing) father = mother;
 
-        }         
-
-ERRORS:
-src/LCEbreed.cc: In member function ‘virtual void LCE_Breed::execute()’:
-src/LCEbreed.cc:595: error: ‘breeding_kernel_sorted’ was not declared in this scope
-src/LCEbreed.cc:624: error: invalid operands of types ‘double [(((long unsigned int)(((long int)lengthBreedKernel) - 1)) + 1u)]’ and ‘double’ to binary ‘operator/’
-make: *** [src/LCEbreed.o] Error 1
-
-
+        }  
+        
 */
 // comment next line out once I get my code working above
         father = this->getFatherPtr(patch, mother, indexOfMother); // probably will want to change this to a new function using my inputs
         
         NewOffsprg = makeOffspring( do_breed(mother, father, i) );
         
-        patch->add(NewOffsprg->getSex(), OFFSx, NewOffsprg);
+        patch->add(NewOffsprg->getSex(), OFFSx, NewOffsprg); // this is okay, b/c offspring is always added to FOCAL patch, not source patch
         
         nbBaby--;
       }//_END__WHILE
