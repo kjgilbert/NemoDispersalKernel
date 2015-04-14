@@ -127,12 +127,12 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
 	
 		if(_paramSet->isSet(prefix + "_connectivity_matrix")) { // this is true if the input includes the xy coordinate matrix
 
-		  _DispMatrix[0] = new TMatrix(); // CHECK HERE WITH FRED, SHOULD THIS STILL BE TMATRIX???
+//		  _DispMatrix[0] = new TMatrix(); // CHECK HERE WITH FRED, SHOULD THIS STILL BE TMATRIX???
 	
-		  _paramSet->getMatrix(prefix + "_connectivity_matrix",_DispMatrix[0]);
+//		  _paramSet->getMatrix(prefix + "_connectivity_matrix",_DispMatrix[0]);
 	
 		  //same dispersal matrix for males and females
-		  _DispMatrix[1] = new TMatrix(*_DispMatrix[0]);
+//		  _DispMatrix[1] = new TMatrix(*_DispMatrix[0]);
 	      // _DispMatrix is an adress in memory
 
 		  // want to be sure then that the sorted kernel has also been given in the input file
@@ -141,6 +141,45 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
 			return false;
 		  }
 		
+		
+				_disp_model=0;
+	
+				get_parameter(prefix + "_connectivity_matrix")->getVariableMatrix(&_reducedDispMat[0]);
+	
+				get_parameter(prefix + "_kernel")->getVariableMatrix(&_reducedDispMatProbs[0]);
+	
+				//need to copy matrices for the other sex (a single matrix is given in input)
+	
+				_reducedDispMat[1].clear();
+				_reducedDispMatProbs[1].clear();
+	
+				if (_reducedDispMat[0].size() != _reducedDispMatProbs[0].size())
+				  return error("The connectivity and reduced dispersal matrices don't have same number of rows\n");
+	
+				for (unsigned int i = 0; i < _reducedDispMat[0].size(); ++i) {
+	  
+				  if (_reducedDispMat[0][i].size() != _reducedDispMatProbs[0][i].size())
+					return error("Row %i of the connectivity and reduced dispersal matrices are not of same size\n", i+1);
+	  
+				  _reducedDispMat[1].push_back(vector<double>());
+	  
+				  _reducedDispMatProbs[1].push_back(vector<double>());
+	  
+				  double row_sum = 0;
+	  
+				  for (unsigned int j = 0; j < _reducedDispMat[0][i].size(); ++j) {
+					_reducedDispMat[1][i].push_back( _reducedDispMat[0][i][j] );
+					_reducedDispMatProbs[1][i].push_back( _reducedDispMatProbs[0][i][j] );
+					row_sum += _reducedDispMatProbs[0][i][j];
+				  }
+	  
+				  if(row_sum < 0.999999 || row_sum > 1.000001)
+					return error("the elements of row %i of the reduced dispersal matrix do not sum to 1!\n",i+1);
+
+				}
+	
+	
+
 		 }
 	}  
 
@@ -1023,7 +1062,7 @@ bool LCE_Disperse_base::setAimedDispMatrix()
 
       // THIS ALL NEEDS TO BE UPDATED/REWRITTEN
       for (unsigned int j = 0; j < num_patch; ++j)
-          cout << (_DispMatrix[0]->get(i, j)) << endl;
+
 	    if(_DispMatrix[0]->get(i, j) != 0) ordered_rates_mal.insert(make_pair(_DispMatrix[0]->get(i, j), j)); // takes the 
       
       for (unsigned int j = 0; j < num_patch; ++j)      
