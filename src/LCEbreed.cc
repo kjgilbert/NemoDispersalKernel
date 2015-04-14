@@ -66,8 +66,8 @@ DoBreedFuncPtr(0), FecundityFuncPtr(0), CheckMatingConditionFuncPtr(0), GetOffsp
   add_parameter("sex_ratio_mode",STR,false,false,0,0, updater);
   
   // Kim adding parameters here now
-  add_parameter("breeding_aimed_patch_matrix",MAT,false,false,0,0,updater); // this will be the patch IDs of patches to potentially look for mates in for a given patch
-  add_parameter("breeding_kernel_sorted",MAT,false,false,0,0,updater); // this will be the 1-d array holding the sorted probabilities of sending gametes to patches 1 through n, and corresponding to the IDs in the above matrix.
+  add_parameter("breeding_connectivity_matrix",MAT,false,false,0,0,updater); // this will be the patch IDs of patches to potentially look for mates in for a given patch
+  add_parameter("breeding_kernel",MAT,false,false,0,0,updater); // this will be the 1-d array holding the sorted probabilities of sending gametes to patches 1 through n, and corresponding to the IDs in the above matrix.
   add_parameter("self_if_alone", BOOL, false, false, 0, 0, updater); // ad a parameter to init file that I can set and if exists will say to self when no mates are found
   add_parameter("always_breed_window", BOOL, false, false, 0, 0, updater); // ad a parameter to init file that I can set and if exists will say to self when no mates are found
   add_parameter("never_breed_window", BOOL, false, false, 0, 0, updater); // ad a parameter to init file that I can set and if exists will say to self when no mates are found
@@ -387,7 +387,7 @@ Individual* LCE_Breed_base::makeOffspring(Individual* ind)
   focalPatch = _popPtr->getPatch(i);
     
   aimedPatchMatrix[0] = new TMatrix();       // make an empty matrix
-  _paramSet->getMatrix("breeding_aimed_patch_matrix",aimedPatchMatrix[0]);  // fill it with parameters from input file
+  _paramSet->getMatrix("breeding_connectivity_matrix",aimedPatchMatrix[0]);  // fill it with parameters from input file
   aimedPatchMatrix[1] = new TMatrix(*aimedPatchMatrix[0]); // don't know what this is doing? copied from LCEdisperse.
 
   while(malePresent = 0)     // do I need ";" here?
@@ -519,7 +519,7 @@ void LCE_Breed::execute()
 
 		// maybe not right? no female dispersal here, just male gametes
 *		aimedPatchMatrix[0] = new TMatrix();       // make an empty matrix
-*		_paramSet->getMatrix("breeding_aimed_patch_matrix",aimedPatchMatrix[0]);  // fill it with parameters from input file
+*		_paramSet->getMatrix("breeding_connectivity_matrix",aimedPatchMatrix[0]);  // fill it with parameters from input file
 *		aimedPatchMatrix[1] = new TMatrix(*aimedPatchMatrix[0]); // don't know what this is doing? copied from LCEdisperse.
 
 		// find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
@@ -569,7 +569,7 @@ void LCE_Breed::execute()
         if(breedWindow){ // then find the other patch that the father comes from
              //  males per patch in breeding window: 
            
-  ** sizeof ....         unsigned int lengthBreedKernel = sizeof(breeding_kernel_sorted) /  sizeof(breeding_kernel_sorted[0]);  // b/c all elements have the same size, this is the way to find the length, i.e. number of elements in the array
+  ** sizeof ....         unsigned int lengthBreedKernel = sizeof(breeding_kernel) /  sizeof(breeding_kernel[0]);  // b/c all elements have the same size, this is the way to find the length, i.e. number of elements in the array
        // NEW things here    
  *          unsigned int arrayNumMales[lengthBreedKernel]; // empty array to fill in number of males per patch
  *          double numerator[lengthBreedKernel];
@@ -585,7 +585,7 @@ void LCE_Breed::execute()
 
                arrayNumMales[k] = checkPatch->size(MAL, ADLTx);  // put that number in the respective spot in the new array
                               
-               numerator[k] = (checkPatch->size(MAL, ADLTx))*(breeding_kernel_sorted[aimedList[k]]);
+               numerator[k] = (checkPatch->size(MAL, ADLTx))*(breeding_kernel[aimedList[k]]);
                
                denominator += numerator[k];
                
@@ -610,7 +610,7 @@ void LCE_Breed::execute()
            
            for(unsigned int k = 0; k < lengthBreedKernel; k++) {
               
-              total += breeding_kernel_sorted[k];
+              total += breeding_kernel[k];
               cumSums[k] = total;
            
            }
