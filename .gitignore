@@ -22,6 +22,8 @@ Makefile_*
 !src/LCEcomposite.h
 !src/LCEdisperse.h
 !src/LCEdisperse.cc
+!src/param.h
+!src/param.cc
 
 
 !Readme.md
