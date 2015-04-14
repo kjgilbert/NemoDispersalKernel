@@ -452,17 +452,19 @@ void LCE_Breed::execute()
   //because mean fecundity can be patch-specific, we have to check whether the patch number changed
   if (_mean_fecundity->getNbCols() != _popPtr->getPatchNbr()) LCE_Breed_base::setFecundity(); // find the mother's patch's fecundity
 
-  // ----------------------------------------------------------------------------------------
-  // Set breeding window parameters, WITHIN the breed execute function
+// ----------------------------------------------------------------------------------------
+// Set breeding window parameters, WITHIN the breed execute function
   if(_paramSet->isSet("breeding_connectivity_matrix") && _paramSet->isSet("breeding_kernel")){
+
       get_parameter("breeding_connectivity_matrix")->getVariableMatrix(&_reducedBreedMat[0]); // make the matrix
       get_parameter("breeding_kernel")->getVariableMatrix(&_reducedBreedMatProbs[0]);  
+
   }
-  // ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
 
 
   for(unsigned int i = 0; i < _popPtr->getPatchNbr(); i++) { // which patch are we in
-    
+//          cout << "\n start of patch loop, focal patch = " << i << endl;  
     patch = _popPtr->getPatch(i);  // current patch we're doing breeding for
 
 // ARE THESE IN THE RIGHT SPOT? might be faster if I move them out of the for loop, but if I do that, after one loop will they always stay at that value?
@@ -476,17 +478,7 @@ void LCE_Breed::execute()
 		// this calls "checkNoSelfing" function in line 93 of this file which is defined in LCEbreed.h
 		//	checkNoSelfing returns true if it counts >0 females and >0 males in a patch 	
 
-/*    get_parameter("breeding_connectivity_matrix")->getVariableMatrix(&_reducedBreedMat[0]);
-    get_parameter("breeding_kernel")->getVariableMatrix(&_reducedBreedMatProbs[0]);
 
-    cout << _reducedBreedMat[0].size() << endl; // gives the number of rows in the matrix
-    cout << _reducedBreedMat[0][0].size() << endl; // gives the length of a row in the matrix
- //   cout << i << endl;
-    
-unsigned int lengthAimedList = _reducedBreedMat[0][i].size();   // gives the length of a row in the matrix
-
-cout << lengthAimedList << endl;
-*/	   
 //******  MY EDITED VERSION
 // below should all be uncommented once working
 
@@ -504,26 +496,33 @@ cout << lengthAimedList << endl;
 
 		// find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
 
-		_reducedBreedMat[0][i]; // pull out the row of the matrix for the focal patch
+		//_reducedBreedMat[0][i]; // pull out the row of the matrix for the focal patch
 
 		unsigned int lengthAimedList = _reducedBreedMat[0][i].size();   // gives the length of a row in the matrix
 
 		for(unsigned int j = 0; j < lengthAimedList; j++ ) { // j = 1 because have already checked focal patch in previous line and only continuing if no male there(spot one is j=0)
 
-			fatherPatch = _popPtr->getPatch(j); // check the next patch in the list
+//				cout << "\n i = " << i << " j = " << j << endl;
+//				cout << "father patch = " << _reducedBreedMat[0][i][j] << endl;
+
+			fatherPatch = _popPtr->getPatch(_reducedBreedMat[0][i][j] - 1); // check the next patch in the list based on its universal patch ID stored in that row (i) of the connectivity matrix, minus one because C++ goes 0 to n-1 and the matrix goes 1 to n
+
+//				cout << "how many males in father patch  = " << fatherPatch->size(MAL, ADLTx) << endl;
+//				cout << "check mating condition " << checkMatingCondition(fatherPatch) << endl;
 
 			if( checkMatingCondition(fatherPatch) ) { // if there IS a male in the patch being checked (checkMatCond is boolean)
 					  //first patch you find with >0 males changes male_present to TRUE
 				 malePresent = 1;   // then change to true, and loop should stop searching, and we proceed onward to breeding 
 				 break;  // BREAK OUT OF THE FOR LOOP IF FIND ANY 1 MALE 
 		     }
-
+//				 cout << "male present = " << malePresent << endl;
+//				 cout << "check mating condition of fatherpatch " << checkMatingCondition(fatherPatch) << endl;
 		} // end for loop, if enter the if statement, should leave for loop early with malePresent = 1;
 		// if finds no males, should still have "male_present = 0" here
         if( !malePresent && !doSelfing ) continue;
      }
  
-
+//				cout << "proceed on to breeding" << endl;
     
     unsigned int cnt =0;
     for(unsigned int size = patch->size(FEM, ADLTx), indexOfMother = 0;
@@ -537,11 +536,9 @@ cout << lengthAimedList << endl;
       //-----------------------------------------------------------------------
       while(nbBaby != 0) {
       
-      
-      
- 		   _reducedBreedMatProbs[0][i]; // pull out the row of the matrix for the focal patch
+ 		//   _reducedBreedMatProbs[0][i]; // pull out the row of the matrix for the focal patch
 
-      cout << _reducedBreedMatProbs[0].size() << endl; // gives the length of one rows, i.e. the breeding kernel because it is a matrix with only one row
+   //   cout << _reducedBreedMatProbs[0].size() << endl; // gives the length of one row, i.e. the breeding kernel because it is a matrix with only one row
       
       // if we have reached this point, then we know there will be at least one male in at least one patch within the breeding kernel or that selfing will occur
       // want to implement "backwards migration" here to then correctly and randomly find the male that becomes the father
@@ -555,10 +552,9 @@ cout << lengthAimedList << endl;
              //  males per patch in breeding window: 
            
 //  ** sizeof ....         unsigned int lengthBreedKernel = sizeof(breeding_kernel) /  sizeof(breeding_kernel[0]);  // b/c all elements have the same size, this is the way to find the length, i.e. number of elements in the array
-       // NEW things here    
- *          
+
  
- 
+ // do NEW here for the new variables
             unsigned int arrayNumMales[lengthAimedList]; // empty array to fill in number of males per patch
 
  
@@ -647,7 +643,7 @@ cout << lengthAimedList << endl;
         father = this->getFatherPtr(patch, mother, indexOfMother); // probably will want to change this to a new function using my inputs
         
         NewOffsprg = makeOffspring( do_breed(mother, father, i) );
-        
+
         patch->add(NewOffsprg->getSex(), OFFSx, NewOffsprg); // this is okay, b/c offspring is always added to FOCAL patch, not source patch
         
         nbBaby--;
