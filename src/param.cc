@@ -1,4 +1,4 @@
-/** $Id: param.cc,v 1.10 2015-04-01 14:19:01 fred Exp $
+/** $Id: param.cc,v 1.11 2015-04-14 07:31:10 fred Exp $
  *
  *  @file param.cc
  *  Nemo2
@@ -384,6 +384,69 @@ void Param::parse_matrix (TMatrix* mat)
 //    delete &(tmpMat[i]);
 //  }
   tmpMat.clear();
+}
+// ----------------------------------------------------------------------------------------
+// getVariableMatrix
+// ----------------------------------------------------------------------------------------
+void Param::getVariableMatrix (vector< vector< double > >* mat)
+{
+  if( isMatrix() && _isSet ){
+    
+    parse_variable_matrix(mat);
+    
+  } else
+    warning("param \"%s\" is not a (variable) matrix!\n",_name.c_str());
+}
+// ----------------------------------------------------------------------------------------
+// parse_variable_matrix
+// ----------------------------------------------------------------------------------------
+void Param::parse_variable_matrix (vector< vector< double > >* mat)
+{
+  //  std::vector< std::vector<double> > tmpMat;
+  std::istringstream IN;
+  
+  IN.str(_arg);
+  
+  double elmnt;
+  char c;
+  
+  //purge the input matrix:
+  mat->clear();
+  
+  int rows = -1, pos = -1;
+  //we count the number of rows
+  do {
+    pos = _arg.find("{", pos + 1);
+    //message("pos %i, arg %s\n",pos,_arg.c_str());
+    rows++;
+  }while(pos != (int)string::npos);
+  //decrement by 1, the first doesn't count for a row
+  rows--;
+  
+  for(int i = 0; i < rows; i++)
+    mat->push_back( vector<double>()  );
+  
+  //remove the first enclosing bracket
+  IN>>c;
+  //then read the rows
+  for(unsigned int i = 0; i < mat->size(); i++) {
+    
+    //read a row enclosed by {...}:
+    while(IN) {
+      
+      //first character:
+      IN>>c;
+      
+      if(c == '{' || c == ',' || c == ';') {
+        //read a row element:
+        IN>>elmnt;
+        (*mat)[i].push_back(elmnt);
+        
+      } else if(c == '}')
+        //go to next row
+        break;
+    }
+  }
 }
 // ----------------------------------------------------------------------------------------
 // update

@@ -1,4 +1,4 @@
-/** $Id: param.h,v 1.9 2015-04-01 14:19:01 fred Exp $
+/** $Id: param.h,v 1.10 2015-04-14 07:31:10 fred Exp $
  *
  *  @file param.h
  *  Nemo2
@@ -168,10 +168,13 @@ class Param
      **/
     void            getMatrix           (TMatrix* mat);
     
+    void            getVariableMatrix   (vector< vector <double> >* mat);
+   
     /**Parses the matrix from the argument string.
      *@param mat a TMatrix ptr, mat dimensions and values will be reset to the values read in the init file.
      **/
     void            parse_matrix         (TMatrix* mat);
+    void            parse_variable_matrix         (vector< vector <double> >* mat);
     bool            parseArgument        (string& arg);
     bool           parseTemporalArgument (const string& arg);
     bool           parseAgeSpecArgument  (const string& arg);

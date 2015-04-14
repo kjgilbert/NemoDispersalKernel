@@ -1,4 +1,4 @@
-/** $Id: LCEdisperse.h,v 1.8 2014-12-19 14:40:34 fred Exp $
+/** $Id: LCEdisperse.h,v 1.9 2015-04-14 07:32:47 fred Exp $
  *
  *  @file LCEdisperse.h
  *  Nemo2
@@ -48,12 +48,9 @@ class LCE_Disperse_base: public virtual LifeCycleEvent
   /**The sex-specific dispersal matrices, [0] for males, [1] for females, might be used as connectivity matrix as well*/
   TMatrix* _DispMatrix[2]; 
   
-  vector< vector<unsigned int> > _reducedDispMat[2];
-
-  vector< vector<double> > _reducedDispMatProbs[2]; // Kim adding, this is the new matrix that can have rows of different sizes, i.e. is not a TMatrix
-    // this should hold the dispersal probabilities of the patches in the kernel -- sum of the row must be 1. check with Fred b/c I want to make this just be 1 row, not same num rows as patches
-    // can it just be a 1-d vector?
-    
+  vector< vector<double> > _reducedDispMat[2];
+  vector< vector<double> > _reducedDispMatProba[2];
+  
   string _prefix;
   
   friend class LCE_Disperse_ConstDisp;
@@ -81,7 +78,6 @@ public:
   void allocateDispMatrix  (sex_t sex, unsigned int dim);
   bool setDispMatrix();
   bool setReducedDispMatrix();
-  bool setAimedDispMatrix(); // added by Kim
   bool updateDispMatrix();
   bool setIsland_MigrantPool_Matrix();
   bool setIsland_PropagulePool_Matrix();
