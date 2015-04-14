@@ -58,7 +58,7 @@ LCE_Disperse_base::~LCE_Disperse_base ()
   
   if(NULL != _DispMatrix[1])
     delete _DispMatrix[1];
-  cout << "in ~ LCE disperse base line 62" << endl;
+
 }
 // ----------------------------------------------------------------------------------------
 void LCE_Disperse_base::addParameters (string prefix, ParamUpdaterBase* updater)
@@ -196,7 +196,7 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
         if(!checkBackwardDispersalMatrix(_DispMatrix[MAL])) return false;
       }
     }
-
+cout << "line 199" << endl;
     setReducedDispMatrix(); // calls on setReducedDispMatrix once has read in all matrices so it can order patches for optimal searching rather than searching all despite order of probabilities
     
   } else if(_paramSet->isSet(prefix + "_connectivity_matrix")) {
@@ -264,7 +264,7 @@ bool LCE_Disperse_base::updateDispMatrix()
     error("cannot update the dispersal matrix provided in input when number of populations changes.\n");
     return false;
   }
-  cout << "updating matrix?" << endl;
+
   return setDispMatrix();
 }
 // ----------------------------------------------------------------------------------------
@@ -440,8 +440,10 @@ bool LCE_Disperse_base::setDispMatrix ()
   }
   
   if(_paramSet->isSet("dispersal_connectivity_matrix") ) { // can't use prefix here because in a different function that doesn't recognize them
+    cout << "line 443" << endl;
     return setAimedDispMatrix(); // go to my new function?
   } else {
+    cout << "line 446" << endl;
     return setReducedDispMatrix(); //  call on reduced disp matrix here if none of the other dispersal models has been set
   } 
 }
@@ -999,73 +1001,124 @@ bool LCE_Disperse_base::setLatticeAbsorbingMatrix()
 
 bool LCE_Disperse_base::setAimedDispMatrix()
 {
- /* unsigned int num_patch = (border_model == 3 ? _npatch + 1 : _npatch); // SOMEHOW? check on this. this is getting the number of patches from that code?
+  unsigned int border_model = (unsigned int)get_parameter_value(_prefix + "_border_model");
+  unsigned int num_patch = (border_model == 3 ? _npatch + 1 : _npatch);
+
+  cout << "test new function \n";
 
   //multimap automatically orders the key values in ascending order
   multimap<double, unsigned int> ordered_rates_fem, ordered_rates_mal;
+  
   typedef multimap<double, unsigned int>::const_iterator CI;
 
-  for (unsigned int sex = 0; sex < 2; sex++)
-    if(_reducedDispMat[sex].size() != 0) _reducedDispMat[sex].clear();
+#ifdef _DEBUG_
+  message("== Dispersal matrices ==\n");
+    _DispMatrix[FEM]->show_up();
+    _DispMatrix[MAL]->show_up();
+#endif
   
-  
-  for (unsigned int i = 0; i < num_patch; ++i) { // go through all the patches
+  // purge the connectivity and reduced dipsersal matrices
+  for (unsigned int sex = 0; sex < 2; sex++) {
+    _reducedDispMat[sex].clear();
+    _reducedDispMatProbs[sex].clear();
+  }
+  // build them from full dispersal matrices given in input
+  for (unsigned int i = 0; i < num_patch; ++i) {
     
-    _reducedDispMat[0].push_back(vector<unsigned int>());
-    _reducedDispMat[1].push_back(vector<unsigned int>());
+    _reducedDispMat[0].push_back(vector<double>());
+    _reducedDispMat[1].push_back(vector<double>());
+    
+    _reducedDispMatProbs[0].push_back(vector<double>());
+    _reducedDispMatProbs[1].push_back(vector<double>());
     
     ordered_rates_fem.clear();
     ordered_rates_mal.clear();
     
-    if(_isForward) { // if doing forward migration
-      
+    if(_isForward) {
+      //make pairs: {disp Probs, patch connected}, will be ordered by dispersal probabilities:
       for (unsigned int j = 0; j < num_patch; ++j)
-        if(_ultraReducedDispMat[0]->get(i, j) != 0) ordered_rates_mal.insert(make_pair(_ultraReducedDispMat[0]->get(i, j), j));
+        if(_DispMatrix[0]->get(i, j) != 0) ordered_rates_mal.insert(make_pair(_DispMatrix[0]->get(i, j), j));
       
       
-      for (unsigned int j = 0; j < num_patch; ++j)      // go through all the patches
-        if(_ultraReducedDispMat[1]->get(i, j) != 0) ordered_rates_fem.insert(make_pair(_ultraReducedDispMat[1]->get(i, j),j));
-
+      for (unsigned int j = 0; j < num_patch; ++j)      
+        if(_DispMatrix[1]->get(i, j) != 0) ordered_rates_fem.insert(make_pair(_DispMatrix[1]->get(i, j),j));
       
-    } else { // otherwise we are doing backwards migration
+      
+    } else {
       //backward migration matrices are read column-wise
       for (unsigned int j = 0; j < num_patch; ++j)
-        if(_ultraReducedDispMat[0]->get(j, i) != 0) ordered_rates_mal.insert(make_pair(_ultraReducedDispMat[0]->get(j, i),j));
+        if(_DispMatrix[0]->get(j, i) != 0) ordered_rates_mal.insert(make_pair(_DispMatrix[0]->get(j, i),j));
       
       for (unsigned int j = 0; j < num_patch; ++j)
-        if(_ultraReducedDispMat[1]->get(j, i) != 0) ordered_rates_fem.insert(make_pair(_ultraReducedDispMat[1]->get(j, i),j));
+        if(_DispMatrix[1]->get(j, i) != 0) ordered_rates_fem.insert(make_pair(_DispMatrix[1]->get(j, i),j));
     }
-    
     
     if(ordered_rates_fem.size() == 1) {
-        _reducedDispMat[1][i].push_back(ordered_rates_fem.begin()->second);
-      //store the patch indices in reverse order of the migration rates:
+      
+      _reducedDispMat[1][i].push_back(ordered_rates_fem.begin()->second);
+      
+      _reducedDispMatProbs[1][i].push_back(ordered_rates_fem.begin()->first);
+      
     } else {
-        CI p;
+      
+      //store the patch indices in reverse order of the migration rates:
+      //store the dispersal rates as well in a separate reduced matrix
+      CI p;
+      
       for (p = --ordered_rates_fem.end(); p != --ordered_rates_fem.begin(); --p) {
-          _reducedDispMat[1][i].push_back(p->second);
-      }
-  
-      //bug fix for the case of 2 patches only (for some reason the second patch recieves only one value...???)
-      if(p == ordered_rates_fem.begin() && (_reducedDispMat[1][i].size() < ordered_rates_fem.size()) )
         _reducedDispMat[1][i].push_back(p->second);
+        _reducedDispMatProbs[1][i].push_back(p->first);
+      }
+      
+      //bug fix for the case of 2 patches only (for some reason the second patch recieves only one value...???)
+      if(p == ordered_rates_fem.begin() && (_reducedDispMat[1][i].size() < ordered_rates_fem.size()) ) {
+        _reducedDispMat[1][i].push_back(p->second);
+        _reducedDispMatProbs[1][i].push_back(p->first);
+      }
     }
-
     
+    //same for the male dispersal matrices
     if(ordered_rates_mal.size() == 1) {
       _reducedDispMat[0][i].push_back(ordered_rates_mal.begin()->second);
+      _reducedDispMatProbs[0][i].push_back(ordered_rates_fem.begin()->first);
     } else {
       CI p;
       for (p = --ordered_rates_mal.end(); p != --ordered_rates_mal.begin(); --p) {
         _reducedDispMat[0][i].push_back(p->second);
+        _reducedDispMatProbs[0][i].push_back(p->first);
       }
       
-      if(p == ordered_rates_mal.begin() && (_reducedDispMat[0][i].size() < ordered_rates_mal.size()) )
+      if(p == ordered_rates_mal.begin() && (_reducedDispMat[0][i].size() < ordered_rates_mal.size()) ) {
         _reducedDispMat[0][i].push_back(p->second);
+        _reducedDispMatProbs[0][i].push_back(p->first);
+      }
     }
   }
-  */
-  cout << "test new function \n";
+  
+  //we can now get rid of the dispersal matrices...
+  for (unsigned int sex = 0; sex < 2; sex++)   delete _DispMatrix[sex];
+  
+		#ifdef _DEBUG_
+			cout << "=== female reduced dispersal matrix ===\n";
+		  for (unsigned int i = 0; i < num_patch; ++i) {
+			cout << "  [";
+			for (unsigned int k = 0; k < _reducedDispMat[FEM][i].size(); k++) {
+			  cout << _reducedDispMatProbs[FEM][i][k] << " [" << _reducedDispMat[FEM][i][k] <<"] ";
+			}
+			cout<<"]\n";
+		  }
+  
+			cout << "=== male reduced dispersal matrix ===\n";
+		  for (unsigned int i = 0; i < num_patch; ++i) {
+			cout << "  [";
+			for (unsigned int k = 0; k < _reducedDispMat[MAL][i].size(); k++) {
+			  cout << _reducedDispMatProbs[MAL][i][k] << " [" << _reducedDispMat[MAL][i][k] <<"] ";
+			}
+			cout<<"]\n";
+	
+		  }
+		#endif
+  
   return true;
 } 
 // ----------------------------------------------------------------------------------------
@@ -1095,8 +1148,8 @@ bool LCE_Disperse_base::setReducedDispMatrix() /// CAN USE THIS FOR DISP KERNEL 
   
   for (unsigned int i = 0; i < num_patch; ++i) { // go through all the patches
     
-    _reducedDispMat[0].push_back(vector<unsigned int>());
-    _reducedDispMat[1].push_back(vector<unsigned int>());
+    _reducedDispMat[0].push_back(vector<double>());
+    _reducedDispMat[1].push_back(vector<double>());
     
     ordered_rates_fem.clear();
     ordered_rates_mal.clear();
@@ -1188,26 +1241,26 @@ unsigned int LCE_Disperse_base::getMigrationPatchForward (sex_t SEX, unsigned in
   if(random > 0.999999) random = 0.999999;//this to avoid overflows when random == 1
   
   if(_paramSet->isSet("dispersal_matrix")) {
-cout << " just before sum line 1192 in original dispersal matrix code" << endl;  
+
      sum = _DispMatrix[SEX]->get(LocalPatch, _reducedDispMat[SEX][LocalPatch][AimedPatch]); // FIGURE OUT THIS LINE
 
      while (random > sum) { // find the aimed patch whose probability matches that of the random number drawn, i.e. the patch that will be migrated into
         AimedPatch++; // keep going through patches
         sum += _DispMatrix[SEX]->get(LocalPatch, _reducedDispMat[SEX][LocalPatch][AimedPatch]); // increase sum until hit the patch matching the drawn random number
      }
-          cout << "finished while loop, line 1198" << endl;
+
      return _reducedDispMat[SEX][LocalPatch][AimedPatch]; // FIGURE OUT THE DETAILS OF WHAT THIS RETURNS - this must be after finding the aimed patch, returning that patch's ID? what is the sex part?
   }
   
   if(_paramSet->isSet("dispersal_connectivity_matrix")) {
-     cout << "enter if statement for disp kernel, line 1203" << endl;
+
      sum = _reducedDispMatProbs[SEX][LocalPatch][AimedPatch]; // FIGURE OUT THIS LINE
 
      while (random > sum) { // find the aimed patch whose probability matches that of the random number drawn, i.e. the patch that will be migrated into
         AimedPatch++; // keep going through patches
         sum += _reducedDispMatProbs[SEX][LocalPatch][AimedPatch]; // increase sum until hit the patch matching the drawn random number
      }
-          cout << "finished while loop, line 1210" << endl;
+
      return _reducedDispMat[SEX][LocalPatch][AimedPatch] - 1; // DOES THIS ONE NEED TO CHANGE??? to the prob matrix? why -1?
   }
     
