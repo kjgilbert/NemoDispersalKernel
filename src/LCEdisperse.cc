@@ -127,7 +127,7 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
 	
 		if(_paramSet->isSet(prefix + "_connectivity_matrix")) { // this is true if the input includes the xy coordinate matrix
 
-		  _DispMatrix[0] = new TMatrix();
+		  _DispMatrix[0] = new TMatrix(); // CHECK HERE WITH FRED, SHOULD THIS STILL BE TMATRIX???
 	
 		  _paramSet->getMatrix(prefix + "_connectivity_matrix",_DispMatrix[0]);
 	
@@ -987,10 +987,6 @@ bool LCE_Disperse_base::setAimedDispMatrix()
   unsigned int border_model = (unsigned int)get_parameter_value(_prefix + "_border_model");
   unsigned int num_patch = (border_model == 3 ? _npatch + 1 : _npatch);
 
-  cout << "in setAimedDispMatrix line 990" << endl;
-  cout <<  _DispMatrix << endl;
-  cout <<  _reducedDispMat << endl;
-  cout <<  _reducedDispMatProbs << endl; // these are addresses in memory
   //multimap automatically orders the key values in ascending order
   multimap<double, unsigned int> ordered_rates_fem, ordered_rates_mal;
   
@@ -1019,15 +1015,19 @@ bool LCE_Disperse_base::setAimedDispMatrix()
     ordered_rates_fem.clear();
     ordered_rates_mal.clear();
     
+    cout << "reached line 1022" << endl;
+    cout << _isForward << endl;
+    
     if(_isForward) {
       //make pairs: {disp Probs, patch connected}, will be ordered by dispersal probabilities:
+
+      // THIS ALL NEEDS TO BE UPDATED/REWRITTEN
       for (unsigned int j = 0; j < num_patch; ++j)
-        if(_DispMatrix[0]->get(i, j) != 0) ordered_rates_mal.insert(make_pair(_DispMatrix[0]->get(i, j), j));
-      
+          cout << (_DispMatrix[0]->get(i, j)) << endl;
+	    if(_DispMatrix[0]->get(i, j) != 0) ordered_rates_mal.insert(make_pair(_DispMatrix[0]->get(i, j), j)); // takes the 
       
       for (unsigned int j = 0; j < num_patch; ++j)      
-        if(_DispMatrix[1]->get(i, j) != 0) ordered_rates_fem.insert(make_pair(_DispMatrix[1]->get(i, j),j));
-      
+        if(_DispMatrix[1]->get(i, j) != 0) ordered_rates_fem.insert(make_pair(_DispMatrix[1]->get(i, j),j));  
       
     } else {
       //backward migration matrices are read column-wise
@@ -1080,6 +1080,7 @@ bool LCE_Disperse_base::setAimedDispMatrix()
     }
   }
   
+  cout << "line 1085" << endl;
   //we can now get rid of the dispersal matrices...
   for (unsigned int sex = 0; sex < 2; sex++)   delete _DispMatrix[sex];
   
