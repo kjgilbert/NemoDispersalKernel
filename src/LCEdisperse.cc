@@ -223,11 +223,6 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
       warning("parameter \"dispersal_matrix\" takes precedence over parameters \"dispersal_rate\" and \"dispersal_model\"\n");
     }
 
-    //_disp_model = 0;
- 
-    //setAimedDispMatrix(); // calls on setReducedDispMatrix once has read in all matrices so it can order patches for optimal searching rather than searching all despite order of probabilities
- // DON'T NEED TO SEND TO AIMED FUNCTION, that function shouldn't even exist because it's previous purpose when named as setReducedMatrix was to use the input to create the reduced one, but we've already used the fed-in reduced one to just put hte values where we need them, then use it in getMigrationPatchForward
-
   } else {
   
     if(!_paramSet->isSet(prefix + "_model")) {
