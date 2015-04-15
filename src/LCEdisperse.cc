@@ -226,8 +226,8 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
 
     _disp_model = 0;
  
-     // NEED TO SET CONTENTS OF THE MATRIX HERE, as in previous if statement
-    setAimedDispMatrix(); // calls on setReducedDispMatrix once has read in all matrices so it can order patches for optimal searching rather than searching all despite order of probabilities
+    //setAimedDispMatrix(); // calls on setReducedDispMatrix once has read in all matrices so it can order patches for optimal searching rather than searching all despite order of probabilities
+ // DON'T NEED TO SEND TO AIMED FUNCTION, that function shouldn't even exist because it's previous purpose when named as setReducedMatrix was to use the input to create the reduced one, but we've already used the fed-in reduced one to just put hte values where we need them, then use it in getMigrationPatchForward
 
   } else {
   
@@ -1010,7 +1010,7 @@ bool LCE_Disperse_base::setLatticeAbsorbingMatrix()
 // ----------------------------------------------------------------------------------------
 /* Kim is making this function to work for nemo edits
 */
-
+/*
 bool LCE_Disperse_base::setAimedDispMatrix()
 {
   unsigned int border_model = (unsigned int)get_parameter_value(_prefix + "_border_model");
@@ -1139,7 +1139,7 @@ bool LCE_Disperse_base::setAimedDispMatrix()
 		#endif
   
   return true;
-} 
+} */
 // ----------------------------------------------------------------------------------------
 // LCE_Disperse_base::setReducedDispMatrix
 // ----------------------------------------------------------------------------------------
