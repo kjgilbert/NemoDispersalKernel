@@ -520,13 +520,13 @@ void LCE_Breed::execute()
       
          if(breedWindow){    // then find the other patch that the father comes from
  
-            unsigned int lengthBreedKernel = _reducedBreedMatProbs[0].size();
+            unsigned int lengthBreedKernel = _reducedBreedMatProbs[0][0].size();
             unsigned int *arrayNumMales = new unsigned int [lengthBreedKernel]; // empty array to fill in number of males per patch
             double *numerator = new double [lengthBreedKernel];
             double *normalBreedKernel = new double [lengthBreedKernel];
             double denominator = 0;
 
-  // normalize mating probabilities into backwards migration rates
+                 // normalize mating probabilities into backwards migration rates
 
            for(unsigned int k = 0; k < lengthBreedKernel; k++){               // lengthAimedList is the same length as the breeding window
 
@@ -540,27 +540,24 @@ void LCE_Breed::execute()
                
                
            }   // end for loop finding number of males per aimed patch
-  //*         
+
                // have to iterate through to divide an array by a single number
            for(unsigned int k = 0; k < lengthBreedKernel; k++){ 
             
              normalBreedKernel[k] = numerator[k] / denominator;  // numerator is an array, denominator is a number
-  cout << "numerator " << normalBreedKernel[k] << endl;
-  cout << "denominator" << denominator << endl;                      
 
            }
-
-  /*         
+        
              // draw a random number between 0 and 1, see what patch that picks probability-wise
              // some spots in the array will be zero, so should never be picked because there are no males there
            
            double sumProbs = 0;
-           double cumSums[lengthBreedKernel];
+           double *cumSums = new double [lengthBreedKernel];
            double total = 0;
            
            for(unsigned int k = 0; k < lengthBreedKernel; k++) {
               
-              total += breeding_kernel[k];
+              total += normalBreedKernel[k];
               cumSums[k] = total;
            
            }
@@ -572,7 +569,7 @@ void LCE_Breed::execute()
            while(c < lengthBreedKernel) {
            
               if(randNum < cumSums[c]) {
-                 fatherPatchID = aimedList[c]; // to get the universal patch ID
+                 fatherPatchID = _reducedBreedMat[0][i][c] - 1; // to get the universal patch ID
                  break; // this breaks out of the whole while loop, c won't iterate up
               } 
               c++;
@@ -584,25 +581,24 @@ void LCE_Breed::execute()
           fatherPatch = _popPtr->getPatch(fatherPatchID);
         
           father = this->getFatherPtr(fatherPatch, mother, indexOfMother);
-*/
 
-// end of if, DELETE THINGS HERE          
-   delete[] arrayNumMales; 
-   delete [] numerator;
-   delete [] normalBreedKernel;       
-        } else { // get the father from the focal patch - will not reach here if no selfing and no male present in focal patch
+		   delete[] arrayNumMales; 
+		   delete [] numerator;
+		   delete [] normalBreedKernel;  
+		   delete [] cumSums;     
+
+        } else {  // get the father from the focal patch - will not reach here if no selfing and no male present in focal patch
         
-          // breeding window is not happening, = 0, one of 2 things happens, normal nemo with a male in the patch, or if no male then we self
-  //              cout << " in the else statement of no breed window" << endl;
-            // focal patch has male, proceed with normal nemo:
+                  // breeding window is not happening, = 0, one of 2 things happens, normal nemo with a male in the patch, or if no male then we self
+
+                  // focal patch has male, proceed with normal nemo:
           if( checkMatingCondition(patch) ) father = this->getFatherPtr(patch, mother, indexOfMother); // if there was a focal patch male, normal nemo mating within patch
           else if(doSelfing) father = mother;
 
         }  
         
-//*/
 // comment next line out once I get my code working above
-        father = this->getFatherPtr(patch, mother, indexOfMother); // probably will want to change this to a new function using my inputs
+        //father = this->getFatherPtr(patch, mother, indexOfMother); // probably will want to change this to a new function using my inputs
         
         NewOffsprg = makeOffspring( do_breed(mother, father, i) );
 
