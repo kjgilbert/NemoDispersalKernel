@@ -150,19 +150,25 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
 
 		 //     if (_reducedDispMat[0][i].size() != _reducedDispMatProbs[0][i].size())
 		 //	      return error("Row %i of the connectivity and reduced dispersal matrices are not of same size\n", i+1);
+         // not doing these checks for the vector form of the kernel
+         // THEREFORE MUST BE SURE TO INPUT THE CORRECT CONNECTIVITY MATRIX SINCE NUMBER OF ROWS IS NEVER CHECKED!
+         
+                 // add the new matrices here one row at a time with push_back to call from the init file
+                 // these are empty at this point
+			  _reducedDispMat[1].push_back(vector<double>()); 
 
-			  _reducedDispMat[1].push_back(vector<double>()); // add a new vector for each row of the matrix
-// these are empty vectors here
 			  _reducedDispMatProbs[1].push_back(vector<double>());
 
 			  double row_sum = 0;
 
-			  for (unsigned int j = 0; j < _reducedDispMat[0][i].size(); ++j) { // now for each row add elements to the vector
+                 // now fill in the values from the init file by looping through all combos, not for the kernel vector, it's jsut one row, could be changed back to many rows by modifying code here and in getMigrationPatchForward
+			  for (unsigned int j = 0; j < _reducedDispMat[0][i].size(); ++j) {          // now for each row add elements to the vector
 			      _reducedDispMat[1][i].push_back( _reducedDispMat[0][i][j] );
 			      _reducedDispMatProbs[1][0].push_back( _reducedDispMatProbs[0][0][j] ); // change 0 back to i for a kernel of more than one row in input file
 			      row_sum += _reducedDispMatProbs[0][0][j];
 			      cout << "i = " << i << ", j = " << j << "probability: " << _reducedDispMatProbs[0][0][j] << " patch ID " << _reducedDispMat[0][i][j] << endl; /////// ************
 			  }
+			     // now we have all the matrix info and can proceed with dispersal
 
 			  if(row_sum < 0.999999 || row_sum > 1.000001)
 				return error("the elements of row %i of the reduced dispersal matrix do not sum to 1!\n",i+1);
