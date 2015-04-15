@@ -128,11 +128,10 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
 
 		  // want to be sure then that the sorted kernel has also been given in the input file
 		  if(!_paramSet->isSet(prefix + "_kernel")) { // if not set, return error, i.e. if it is set, the ! should make it return false and not throw the error
-			error("Dispersal rate parameters not set!\n");
+			error("Dispersal kernel must be set with the connectivity matrix!\n");
 			return false;
 		  }
 		
-
 		  _disp_model=0;
 
 		  get_parameter(prefix + "_connectivity_matrix")->getVariableMatrix(&_reducedDispMat[0]);
@@ -144,13 +143,13 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
 		  _reducedDispMat[1].clear(); // this is for the other sex 1 = female, 0 = male, clear empties anything from before
 		  _reducedDispMatProbs[1].clear();
 
-		  if (_reducedDispMat[0].size() != _reducedDispMatProbs[0].size())
-		      return error("The connectivity and reduced dispersal matrices don't have same number of rows\n");
+		  if (_reducedDispMat[0][0].size() != _reducedDispMatProbs[0][0].size()) // modified to just check row lenth, not number of rows, because I just want to have one kernel as a row of probabilities that match to all connectivity matrices, remove the second [0] in both to do the full check to make them match totally
+		      return error("The connectivity and reduced dispersal matrices don't have same row length!\n");
 
 		  for (unsigned int i = 0; i < _reducedDispMat[0].size(); ++i) {
 
-		      if (_reducedDispMat[0][i].size() != _reducedDispMatProbs[0][i].size())
-			      return error("Row %i of the connectivity and reduced dispersal matrices are not of same size\n", i+1);
+		 //     if (_reducedDispMat[0][i].size() != _reducedDispMatProbs[0][i].size())
+		 //	      return error("Row %i of the connectivity and reduced dispersal matrices are not of same size\n", i+1);
 
 			  _reducedDispMat[1].push_back(vector<double>()); // add a new vector for each row of the matrix
 // these are empty vectors here
@@ -160,9 +159,9 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
 
 			  for (unsigned int j = 0; j < _reducedDispMat[0][i].size(); ++j) { // now for each row add elements to the vector
 			      _reducedDispMat[1][i].push_back( _reducedDispMat[0][i][j] );
-			      _reducedDispMatProbs[1][i].push_back( _reducedDispMatProbs[0][i][j] );
-			      row_sum += _reducedDispMatProbs[0][i][j];
-			      cout << "i = " << i << ", j = " << j << endl; /////// ************
+			      _reducedDispMatProbs[1][0].push_back( _reducedDispMatProbs[0][0][j] ); // change 0 back to i for a kernel of more than one row in input file
+			      row_sum += _reducedDispMatProbs[0][0][j];
+			      cout << "i = " << i << ", j = " << j << "probability: " << _reducedDispMatProbs[0][0][j] << " patch ID " << _reducedDispMat[0][i][j] << endl; /////// ************
 			  }
 
 			  if(row_sum < 0.999999 || row_sum > 1.000001)
@@ -224,7 +223,7 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
       warning("parameter \"dispersal_matrix\" takes precedence over parameters \"dispersal_rate\" and \"dispersal_model\"\n");
     }
 
-    _disp_model = 0;
+    //_disp_model = 0;
  
     //setAimedDispMatrix(); // calls on setReducedDispMatrix once has read in all matrices so it can order patches for optimal searching rather than searching all despite order of probabilities
  // DON'T NEED TO SEND TO AIMED FUNCTION, that function shouldn't even exist because it's previous purpose when named as setReducedMatrix was to use the input to create the reduced one, but we've already used the fed-in reduced one to just put hte values where we need them, then use it in getMigrationPatchForward
@@ -451,13 +450,13 @@ bool LCE_Disperse_base::setDispMatrix ()
     }
   }
   
-  if(_paramSet->isSet("dispersal_connectivity_matrix") ) { // can't use prefix here because in a different function that doesn't recognize them
+//  if(_paramSet->isSet("dispersal_connectivity_matrix") ) { // can't use prefix here because in a different function that doesn't recognize them
 
-    return setAimedDispMatrix(); // go to my new function?
-  } else {
+//    return setAimedDispMatrix(); // go to my new function?
+//  } else {
 
     return setReducedDispMatrix(); //  call on reduced disp matrix here if none of the other dispersal models has been set
-  } 
+//  } 
 }
 // ----------------------------------------------------------------------------------------
 // LCE_Disperse_base::setIsland_MigrantPool_Matrix()  (set the Island dispersal matrix)
@@ -1149,6 +1148,11 @@ bool LCE_Disperse_base::setAimedDispMatrix()
 */
 bool LCE_Disperse_base::setReducedDispMatrix() /// CAN USE THIS FOR DISP KERNEL MODIFICATIONS I'LL BE MAKING
 {
+  cout << "trying to set reduced" << endl;
+  if(_paramSet->isSet("dispersal_connectivity_matrix")) return true;
+  
+  cout << "don't print this with connectivity matrix" << endl;
+  
   unsigned int border_model = (unsigned int)get_parameter_value(_prefix + "_border_model"); // check if there are reflecting or absorbing boundaries set from the input
   unsigned int num_patch = (border_model == 3 ? _npatch + 1 : _npatch); // SOMEHOW? check on this. this is getting the number of patches from that code?
 
@@ -1273,24 +1277,18 @@ unsigned int LCE_Disperse_base::getMigrationPatchForward (sex_t SEX, unsigned in
   
   if(_paramSet->isSet("dispersal_connectivity_matrix")) {
 
-     sum = _reducedDispMatProbs[SEX][LocalPatch][AimedPatch]; // FIGURE OUT THIS LINE
+     sum = _reducedDispMatProbs[SEX][0][AimedPatch]; // replace 0 with "LocalPatch" to go back to original state
 
      while (random > sum) { // find the aimed patch whose probability matches that of the random number drawn, i.e. the patch that will be migrated into
-        AimedPatch++; // keep going through patches
-        sum += _reducedDispMatProbs[SEX][LocalPatch][AimedPatch]; // increase sum until hit the patch matching the drawn random number
-     }
 
-     return _reducedDispMat[SEX][LocalPatch][AimedPatch] - 1; // DOES THIS ONE NEED TO CHANGE??? to the prob matrix? why -1?
+        AimedPatch++; // keep going through patches
+        sum += _reducedDispMatProbs[SEX][0][AimedPatch]; // increase sum until hit the patch matching the drawn random number
+     }
+cout << "using reduced matrix, sex= " << SEX << " local patch ID = " << LocalPatch << " aimed patch ID = " << AimedPatch << "returning this value " << (_reducedDispMat[SEX][LocalPatch][AimedPatch] - 1) << endl;
+     return _reducedDispMat[SEX][LocalPatch][AimedPatch] - 1; 
   }
     
-/* original code had no if statements, and this followed the sum statement:
-  while (random > sum) { // find the aimed patch whose probability matches that of the random number drawn, i.e. the patch that will be migrated into
-    AimedPatch++; // keep going through patches
-    sum += _DispMatrix[SEX]->get(LocalPatch, _reducedDispMat[SEX][LocalPatch][AimedPatch]); // increase sum until hit the patch matching the drawn random number
-  }
-cout << "finished while loop, line 1197" << endl;
-  return _reducedDispMat[SEX][LocalPatch][AimedPatch]; // FIGURE OUT THE DETAILS OF WHAT THIS RETURNS - this must be after finding the aimed patch, returning that patch's ID? what is the sex part?
-*/
+
 }
 
 // ----------------------------------------------------------------------------------------
@@ -1439,7 +1437,7 @@ void LCE_Disperse_ConstDisp::MigratePatch (sex_t SEX, unsigned int LocalPatch)
   unsigned int Limit = _npatch -1;
   
   while( patch->size(SEX, OFFSx) != 0 ) {
-    
+
     do{
       AimedPatch = getMigrationPatchForward(SEX, LocalPatch);
     }while ( AimedPatch > Limit );
