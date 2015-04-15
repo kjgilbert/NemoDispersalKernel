@@ -141,7 +141,7 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
 
 	      //need to copy matrices for the other sex (a single matrix is given in input)
 
-		  _reducedDispMat[1].clear();
+		  _reducedDispMat[1].clear(); // this is for the other sex 1 = female, 0 = male, clear empties anything from before
 		  _reducedDispMatProbs[1].clear();
 
 		  if (_reducedDispMat[0].size() != _reducedDispMatProbs[0].size())
@@ -152,13 +152,13 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
 		      if (_reducedDispMat[0][i].size() != _reducedDispMatProbs[0][i].size())
 			      return error("Row %i of the connectivity and reduced dispersal matrices are not of same size\n", i+1);
 
-			  _reducedDispMat[1].push_back(vector<double>());
-
+			  _reducedDispMat[1].push_back(vector<double>()); // add a new vector for each row of the matrix
+// these are empty vectors here
 			  _reducedDispMatProbs[1].push_back(vector<double>());
 
 			  double row_sum = 0;
 
-			  for (unsigned int j = 0; j < _reducedDispMat[0][i].size(); ++j) {
+			  for (unsigned int j = 0; j < _reducedDispMat[0][i].size(); ++j) { // now for each row add elements to the vector
 			      _reducedDispMat[1][i].push_back( _reducedDispMat[0][i][j] );
 			      _reducedDispMatProbs[1][i].push_back( _reducedDispMatProbs[0][i][j] );
 			      row_sum += _reducedDispMatProbs[0][i][j];
