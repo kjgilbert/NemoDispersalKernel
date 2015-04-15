@@ -597,7 +597,7 @@ void LCE_Breed::execute()
 
         }  
         
-// comment next line out once I get my code working above
+          // comment next line out once I get my code working above
         //father = this->getFatherPtr(patch, mother, indexOfMother); // probably will want to change this to a new function using my inputs
         
         NewOffsprg = makeOffspring( do_breed(mother, father, i) );
