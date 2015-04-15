@@ -438,7 +438,6 @@ void LCE_Breed::execute()
   bool doSelfing;
   Patch* fatherPatch;
   Patch* checkPatch;
-  Patch* focalPatch;
   
 #ifdef _DEBUG_
   message("LCE_Breed::execute (Patch nb: %i offsprg nb: %i adlt nb: %i)\n"
@@ -449,7 +448,7 @@ void LCE_Breed::execute()
     warning("offspring containers not empty at time of breeding, flushing.\n");
     _popPtr->flush(OFFSx);
   }
-  //because mean fecundity can be patch-specific, we have to check whether the patch number changed
+    //because mean fecundity can be patch-specific, we have to check whether the patch number changed
   if (_mean_fecundity->getNbCols() != _popPtr->getPatchNbr()) LCE_Breed_base::setFecundity(); // find the mother's patch's fecundity
 
 // ----------------------------------------------------------------------------------------
@@ -457,73 +456,55 @@ void LCE_Breed::execute()
   if(_paramSet->isSet("breeding_connectivity_matrix") && _paramSet->isSet("breeding_kernel")){
 
       get_parameter("breeding_connectivity_matrix")->getVariableMatrix(&_reducedBreedMat[0]); // make the matrix
-      get_parameter("breeding_kernel")->getVariableMatrix(&_reducedBreedMatProbs[0]);  
+      get_parameter("breeding_kernel")->getVariableMatrix(&_reducedBreedMatProbs[0]); 
 
   }
 // ----------------------------------------------------------------------------------------
 
 
   for(unsigned int i = 0; i < _popPtr->getPatchNbr(); i++) { // which patch are we in
-//          cout << "\n start of patch loop, focal patch = " << i << endl;  
-    patch = _popPtr->getPatch(i);  // current patch we're doing breeding for
+          cout << "\n start of patch loop, focal patch = " << i << endl;  
+    patch = _popPtr->getPatch(i);                            // current memory address of patch we're doing breeding for
+    
+      // if no mothers in the focal patch, mating cannot happen at all, continue to next patch (i.e. restart this for loop to the next patch i)
+	if( !patch->size(FEM, ADLTx) ) continue; // if true, exit breeding, true when =1, =1 if !=0, !=0 means there are no females in the patch because returns 0 after the '!'
 
-// ARE THESE IN THE RIGHT SPOT? might be faster if I move them out of the for loop, but if I do that, after one loop will they always stay at that value?
-    doSelfing = 0;   // set defaults
+    doSelfing = 0;    // set defaults
     breedWindow = 0;  
-    if(_paramSet->isSet("self_if_alone")) doSelfing = 1;  // only change defaults if specified from init file
+    if(_paramSet->isSet("self_if_alone")) doSelfing = 1;           // only change defaults if specified from init file
     if(_paramSet->isSet("always_breed_window")) breedWindow = 1;   // 
 
     if( (_paramSet->isSet("never_breed_window")) && !checkMatingCondition(patch) && !doSelfing) continue;
-    	// if no males and we never want to use the breeding window and we're not allowing selfing, nemo behaves like the old version and exits loop and continue through code
-		// this calls "checkNoSelfing" function in line 93 of this file which is defined in LCEbreed.h
-		//	checkNoSelfing returns true if it counts >0 females and >0 males in a patch 	
-
-
-//******  MY EDITED VERSION
-// below should all be uncommented once working
+    	  // if no males and we never want to use the breeding window and we're not allowing selfing, nemo behaves like the old version and exits loop and continue through code
+		  // this calls "checkNoSelfing" function in line 93 of this file which is defined in LCEbreed.h
+		  //	checkNoSelfing returns true if it counts >0 females and >0 males in a patch 	
 
     if( !checkMatingCondition(patch) ) {    // if breedWindow is true (=1) then will always use the breeding window regardless of any males in focal patch
-		breedWindow = 1;           // to use below when I tell it to actually use the breeding window function, 1=true
-
-		bool malePresent = 0;   // if no one in the focal patch, find a nearby male to mate with; false = 0, true = 1
-		Patch* focalPatch;
-
-		focalPatch = _popPtr->getPatch(i);
+		                                    // find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
+		breedWindow = 1;                    // to use below when I tell it to actually use the breeding window function, 1=true
+        bool malePresent = 0;               // if no one in the focal patch, find a nearby male to mate with; false = 0, true = 1
 		
-		// _reducedBreedMat has the IDs
-		// _reducedBreedMatProbs has the probabilities
+		  // _reducedBreedMat has the IDs
+		  // _reducedBreedMatProbs has the probabilities
 
+		unsigned int lengthAimedList = _reducedBreedMat[0][i].size();       // gives the length of a row in the matrix
 
-		// find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
-
-		//_reducedBreedMat[0][i]; // pull out the row of the matrix for the focal patch
-
-		unsigned int lengthAimedList = _reducedBreedMat[0][i].size();   // gives the length of a row in the matrix
-
-		for(unsigned int j = 0; j < lengthAimedList; j++ ) { // j = 1 because have already checked focal patch in previous line and only continuing if no male there(spot one is j=0)
-
-//				cout << "\n i = " << i << " j = " << j << endl;
-//				cout << "father patch = " << _reducedBreedMat[0][i][j] << endl;
+		for(unsigned int j = 0; j < lengthAimedList; j++ ) {                // recheck patch 0 here, if we enter this loop, no males will be there, but just easier to do anyway
 
 			fatherPatch = _popPtr->getPatch(_reducedBreedMat[0][i][j] - 1); // check the next patch in the list based on its universal patch ID stored in that row (i) of the connectivity matrix, minus one because C++ goes 0 to n-1 and the matrix goes 1 to n
 
-//				cout << "how many males in father patch  = " << fatherPatch->size(MAL, ADLTx) << endl;
-//				cout << "check mating condition " << checkMatingCondition(fatherPatch) << endl;
+				cout << "how many males in father patch  = " << fatherPatch->size(MAL, ADLTx) << endl;
 
 			if( checkMatingCondition(fatherPatch) ) { // if there IS a male in the patch being checked (checkMatCond is boolean)
-					  //first patch you find with >0 males changes male_present to TRUE
+					                //first patch you find with >0 males changes male_present to TRUE
 				 malePresent = 1;   // then change to true, and loop should stop searching, and we proceed onward to breeding 
-				 break;  // BREAK OUT OF THE FOR LOOP IF FIND ANY 1 MALE 
+				 break;             // BREAK OUT OF THE FOR LOOP IF FIND ANY 1 MALE 
 		     }
-//				 cout << "male present = " << malePresent << endl;
-//				 cout << "check mating condition of fatherpatch " << checkMatingCondition(fatherPatch) << endl;
-		} // end for loop, if enter the if statement, should leave for loop early with malePresent = 1;
-		// if finds no males, should still have "male_present = 0" here
+		}    // end for loop, if enter the if statement, should leave for loop early with malePresent = 1;
+		     // if finds no males, should still have "male_present = 0" here
         if( !malePresent && !doSelfing ) continue;
      }
  
-//				cout << "proceed on to breeding" << endl;
-    
     unsigned int cnt =0;
     for(unsigned int size = patch->size(FEM, ADLTx), indexOfMother = 0;
         indexOfMother < size;
@@ -532,66 +513,44 @@ void LCE_Breed::execute()
       mother = patch->get(FEM, ADLTx, indexOfMother);
       
       nbBaby = (unsigned int)mother->setFecundity( getFecundity(i) ) ; //allows for patch-specific fec
+      
       cnt += nbBaby;
       //-----------------------------------------------------------------------
       while(nbBaby != 0) {
       
- 		//   _reducedBreedMatProbs[0][i]; // pull out the row of the matrix for the focal patch
-
-   //   cout << _reducedBreedMatProbs[0].size() << endl; // gives the length of one row, i.e. the breeding kernel because it is a matrix with only one row
-      
-      // if we have reached this point, then we know there will be at least one male in at least one patch within the breeding kernel or that selfing will occur
-      // want to implement "backwards migration" here to then correctly and randomly find the male that becomes the father
-         // will have to on the fly convert the forward migration matrix input from the init file into the appropriate backwards migration matrix
-         
-        // use the corrected backwards migration matrix to find the correct father patch, then just continue to next function as it exists? 
-/*
-
-
-        if(breedWindow){ // then find the other patch that the father comes from
-             //  males per patch in breeding window: 
-           
-//  ** sizeof ....         unsigned int lengthBreedKernel = sizeof(breeding_kernel) /  sizeof(breeding_kernel[0]);  // b/c all elements have the same size, this is the way to find the length, i.e. number of elements in the array
-
+         if(breedWindow){    // then find the other patch that the father comes from
  
- // do NEW here for the new variables
-            unsigned int arrayNumMales[lengthAimedList]; // empty array to fill in number of males per patch
+            unsigned int lengthBreedKernel = _reducedBreedMatProbs[0].size();
+            unsigned int *arrayNumMales = new unsigned int [lengthBreedKernel]; // empty array to fill in number of males per patch
+            double *numerator = new double [lengthBreedKernel];
+            double *normalBreedKernel = new double [lengthBreedKernel];
+            double denominator = 0;
 
- 
- *          double numerator[lengthAimedList];
- *          double normalBreedKernel[lengthAimedList];
-            
-            
-            get_parameter("breeding_kernel")->getVariableMatrix(&_reducedBreedMatProbs[0]);
- 		    _reducedBreedMatProbs[0][i]; // pull out the row of the matrix for the focal patch
-
-*		aimedList = aimedPatchMatrix[i]; // pull out the row of IDS (NOT PROB) the matrix for the focal patch
   // normalize mating probabilities into backwards migration rates
-           double denominator = 0;
 
+           for(unsigned int k = 0; k < lengthBreedKernel; k++){               // lengthAimedList is the same length as the breeding window
 
-           for(unsigned int k = 0; k < lengthAimedList; k++){ // lengthAimedList is the same length as the breeding window
+               checkPatch = _popPtr->getPatch(_reducedBreedMat[0][i][k] - 1); // check the patch being iterated - this should be the patch's ID number relative to the whole landscape, - 1 because input is +1 vs what C++ calls the universal patch ID
 
-               checkPatch = _popPtr->getPatch(aimedList[k]); // check the patch being iterated - this should be the patch's ID number relative to the whole landscape
+               arrayNumMales[k] = checkPatch->size(MAL, ADLTx);               // put that number in the respective spot in the new array
 
-               arrayNumMales[k] = checkPatch->size(MAL, ADLTx);  // put that number in the respective spot in the new array
-                              
-               numerator[k] = (checkPatch->size(MAL, ADLTx))*(breeding_kernel[aimedList[k]]);
-               
+               numerator[k] = (checkPatch->size(MAL, ADLTx))*(_reducedBreedMatProbs[0][0][k]);
+
                denominator += numerator[k];
                
                
            }   // end for loop finding number of males per aimed patch
-           
-                                 
-          // have to iterate through to divide an array by a single number
+  //*         
+               // have to iterate through to divide an array by a single number
            for(unsigned int k = 0; k < lengthBreedKernel; k++){ 
             
              normalBreedKernel[k] = numerator[k] / denominator;  // numerator is an array, denominator is a number
-           
+  cout << "numerator " << normalBreedKernel[k] << endl;
+  cout << "denominator" << denominator << endl;                      
+
            }
 
-           
+  /*         
              // draw a random number between 0 and 1, see what patch that picks probability-wise
              // some spots in the array will be zero, so should never be picked because there are no males there
            
@@ -625,20 +584,23 @@ void LCE_Breed::execute()
           fatherPatch = _popPtr->getPatch(fatherPatchID);
         
           father = this->getFatherPtr(fatherPatch, mother, indexOfMother);
+*/
 
 // end of if, DELETE THINGS HERE          
-          
+   delete[] arrayNumMales; 
+   delete [] numerator;
+   delete [] normalBreedKernel;       
         } else { // get the father from the focal patch - will not reach here if no selfing and no male present in focal patch
         
           // breeding window is not happening, = 0, one of 2 things happens, normal nemo with a male in the patch, or if no male then we self
-
+  //              cout << " in the else statement of no breed window" << endl;
             // focal patch has male, proceed with normal nemo:
           if( checkMatingCondition(patch) ) father = this->getFatherPtr(patch, mother, indexOfMother); // if there was a focal patch male, normal nemo mating within patch
           else if(doSelfing) father = mother;
 
         }  
         
-*/
+//*/
 // comment next line out once I get my code working above
         father = this->getFatherPtr(patch, mother, indexOfMother); // probably will want to change this to a new function using my inputs
         
