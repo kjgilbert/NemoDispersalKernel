@@ -570,9 +570,7 @@ void LCE_Breed::execute()
               if(randNum < cumSums[c]) {
                  fatherPatchID = _reducedBreedMat[0][i][c] - 1; // to get the universal patch ID
                                   
-					cout << i << " " << _reducedBreedMat[0][i][c] << endl;
-					cout << "# how many males in father patch  = " << fatherPatch->size(MAL, ADLTx) << endl;
-					cout << "# how many females in focal patch  = " << patch->size(FEM, ADLTx) << endl;
+				//	cout << i << " " << _reducedBreedMat[0][i][c] << endl;
 
                  break; // this breaks out of the whole while loop, c won't iterate up
               } 
@@ -586,13 +584,17 @@ void LCE_Breed::execute()
         
           father = this->getFatherPtr(fatherPatch, mother, indexOfMother);
 
+				//	cout << "# how many males in father patch  = " << fatherPatch->size(MAL, ADLTx) << endl;
+				//	cout << "# how many females in focal patch  = " << patch->size(FEM, ADLTx) << endl;
+
+
 		   delete[] arrayNumMales; 
 		   delete [] numerator;
 		   delete [] normalBreedKernel;  
 		   delete [] cumSums;     
 
         } else {  // get the father from the focal patch - will not reach here if no selfing and no male present in focal patch
-        
+        	//	cout << "# only get here if no breed window and/or selfing is possible" << endl;
                   // breeding window is not happening, = 0, one of 2 things happens, normal nemo with a male in the patch, or if no male then we self
 
                   // focal patch has male, proceed with normal nemo:
