@@ -166,7 +166,7 @@ bool LCE_Disperse_base::setBaseParameters(string prefix)
 			      _reducedDispMat[1][i].push_back( _reducedDispMat[0][i][j] );
 			      _reducedDispMatProbs[1][0].push_back( _reducedDispMatProbs[0][0][j] ); // change 0 back to i for a kernel of more than one row in input file
 			      row_sum += _reducedDispMatProbs[0][0][j];
-			      cout << "i = " << i << ", j = " << j << "probability: " << _reducedDispMatProbs[0][0][j] << " patch ID " << _reducedDispMat[0][i][j] << endl; /////// ************
+// for testing:   cout << "i = " << i << ", j = " << j << "probability: " << _reducedDispMatProbs[0][0][j] << " patch ID " << _reducedDispMat[0][i][j] << endl; /////// ************
 			  }
 			     // now we have all the matrix info and can proceed with dispersal
 
@@ -1014,11 +1014,9 @@ bool LCE_Disperse_base::setLatticeAbsorbingMatrix()
 */
 bool LCE_Disperse_base::setReducedDispMatrix() /// CAN USE THIS FOR DISP KERNEL MODIFICATIONS I'LL BE MAKING
 {
-  cout << "trying to set reduced" << endl;
+
   if(_paramSet->isSet("dispersal_connectivity_matrix")) return true;
-  
-  cout << "don't print this with connectivity matrix" << endl;
-  
+    
   unsigned int border_model = (unsigned int)get_parameter_value(_prefix + "_border_model"); // check if there are reflecting or absorbing boundaries set from the input
   unsigned int num_patch = (border_model == 3 ? _npatch + 1 : _npatch); // SOMEHOW? check on this. this is getting the number of patches from that code?
 
@@ -1150,7 +1148,8 @@ unsigned int LCE_Disperse_base::getMigrationPatchForward (sex_t SEX, unsigned in
         AimedPatch++; // keep going through patches
         sum += _reducedDispMatProbs[SEX][0][AimedPatch]; // increase sum until hit the patch matching the drawn random number
      }
-cout << "using reduced matrix, sex= " << SEX << " local patch ID = " << LocalPatch << " aimed patch ID = " << AimedPatch << "returning this value " << (_reducedDispMat[SEX][LocalPatch][AimedPatch] - 1) << endl;
+
+//	cout << LocalPatch << " " << _reducedDispMat[SEX][LocalPatch][AimedPatch] << endl; // to check new dispersal matrices are working properly
      return _reducedDispMat[SEX][LocalPatch][AimedPatch] - 1; 
   }
     

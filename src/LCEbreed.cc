@@ -438,6 +438,7 @@ void LCE_Breed::execute()
   bool doSelfing;
   Patch* fatherPatch;
   Patch* checkPatch;
+  Patch* checkFatherPatch;
   
 #ifdef _DEBUG_
   message("LCE_Breed::execute (Patch nb: %i offsprg nb: %i adlt nb: %i)\n"
@@ -463,7 +464,7 @@ void LCE_Breed::execute()
 
 
   for(unsigned int i = 0; i < _popPtr->getPatchNbr(); i++) { // which patch are we in
-          cout << "\n start of patch loop, focal patch = " << i << endl;  
+
     patch = _popPtr->getPatch(i);                            // current memory address of patch we're doing breeding for
     
       // if no mothers in the focal patch, mating cannot happen at all, continue to next patch (i.e. restart this for loop to the next patch i)
@@ -491,11 +492,9 @@ void LCE_Breed::execute()
 
 		for(unsigned int j = 0; j < lengthAimedList; j++ ) {                // recheck patch 0 here, if we enter this loop, no males will be there, but just easier to do anyway
 
-			fatherPatch = _popPtr->getPatch(_reducedBreedMat[0][i][j] - 1); // check the next patch in the list based on its universal patch ID stored in that row (i) of the connectivity matrix, minus one because C++ goes 0 to n-1 and the matrix goes 1 to n
+			checkFatherPatch = _popPtr->getPatch(_reducedBreedMat[0][i][j] - 1); // check the next patch in the list based on its universal patch ID stored in that row (i) of the connectivity matrix, minus one because C++ goes 0 to n-1 and the matrix goes 1 to n
 
-				cout << "how many males in father patch  = " << fatherPatch->size(MAL, ADLTx) << endl;
-
-			if( checkMatingCondition(fatherPatch) ) { // if there IS a male in the patch being checked (checkMatCond is boolean)
+			if( checkMatingCondition(checkFatherPatch) ) { // if there IS a male in the patch being checked (checkMatCond is boolean)
 					                //first patch you find with >0 males changes male_present to TRUE
 				 malePresent = 1;   // then change to true, and loop should stop searching, and we proceed onward to breeding 
 				 break;             // BREAK OUT OF THE FOR LOOP IF FIND ANY 1 MALE 
@@ -570,6 +569,11 @@ void LCE_Breed::execute()
            
               if(randNum < cumSums[c]) {
                  fatherPatchID = _reducedBreedMat[0][i][c] - 1; // to get the universal patch ID
+                                  
+					cout << i << " " << _reducedBreedMat[0][i][c] << endl;
+					cout << "# how many males in father patch  = " << fatherPatch->size(MAL, ADLTx) << endl;
+					cout << "# how many females in focal patch  = " << patch->size(FEM, ADLTx) << endl;
+
                  break; // this breaks out of the whole while loop, c won't iterate up
               } 
               c++;
