@@ -18,7 +18,7 @@ Two new parameters in the .init file allow for a constant dispersal kernel acros
 
 #### Breeding Window
 
-Four new parameters in the .init file allow for use of a breeding window and a couple related features. Similar to the dispersal kernel, the breeding window will let fathers be chosen from the specified patches with the specified probabilities. This can be set to happen every time an offspring is created, or set to only occur if the patch containing the female has no males present. In the latter case, if there is no male in the focal patch, and there is a female, and still no male is found within the breeding window, the female can be told to self.
+Four new parameters in the .init file allow for use of a breeding window and related features. Similar to the dispersal kernel, the breeding window will let fathers be chosen from the specified patches with the specified probabilities. This can be set to happen every time an offspring is created, or set to only occur if the patch containing the female has no males present. In the latter case, if there is no male in the focal patch, and there is a female, and still no male is found within the breeding window, the female can be told to self.
 
 1: "self_if_alone" is a boolean parameter, which if specified in the .init file will tell females to self if they are unable to find a male to mate with.
 
