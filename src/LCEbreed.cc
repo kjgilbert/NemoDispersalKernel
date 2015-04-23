@@ -557,6 +557,7 @@ void LCE_Breed::execute()
            for(unsigned int k = 0; k < lengthBreedKernel; k++) {
               
               total += normalBreedKernel[k];
+              cout << normalBreedKernel[k] << endl;
               cumSums[k] = total;
            
            }
@@ -584,6 +585,7 @@ void LCE_Breed::execute()
         
           father = this->getFatherPtr(fatherPatch, mother, indexOfMother);
 
+cout << i << " " << fatherPatchID << endl;
 				//	cout << "# how many males in father patch  = " << fatherPatch->size(MAL, ADLTx) << endl;
 				//	cout << "# how many females in focal patch  = " << patch->size(FEM, ADLTx) << endl;
 
