@@ -537,13 +537,6 @@ void LCE_Breed::execute()
 
                denominator += numerator[k];
                
-               cout << "length breed kernel = " << lengthBreedKernel << endl;
-               cout << "num males in that patch = " << arrayNumMales[k] << endl;
-               cout << "prob of finding dad in that patch = " << _reducedBreedMatProbs[0][0][k] << endl;
-               cout << "numerator[k] = " << numerator[k] << endl;
-               cout << "denominator (sums as we go) = " << denominator << endl;
-         
-               
            }   // end for loop finding number of males per aimed patch
 
                // have to iterate through to divide an array by a single number
@@ -563,11 +556,9 @@ void LCE_Breed::execute()
            for(unsigned int k = 0; k < lengthBreedKernel; k++) {
               
               total += normalBreedKernel[k];
-              cout << "prob " << normalBreedKernel[k] << endl;
               cumSums[k] = total;
            
            }
-           assert(1==2); // make the code stop here for now so it doesn't print a million things
            
            unsigned int c = 0;
            unsigned int fatherPatchID;
