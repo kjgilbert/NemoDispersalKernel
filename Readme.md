@@ -27,3 +27,7 @@ Four new parameters in the .init file allow for use of a breeding window and a c
 3: "breeding_kernel" takes the same format as "dispersal_kernel" above, except that these probabilities are the forward probabilities that any other nearby patch would have of contributing a father to the focal patch. Within the code, these probabilities are then normalized based on the number of males present at any given time in the potential patches.
 
 4: "breeding_connectivity_matrix" takes the same format as "dispersal_connectivity_matrix" above, and contains the patch IDs of all patches within the breeding window, corresponding to the probabilities provided in "breeding_kernel".
+
+#### Deleterious Mutations
+
+One small modification has been made to the gamma distribution for deleterious mutations, where 30% of the time, a mutation is lethal. Do not include this version of ttdeletmutations_bitstring.cc if you would not like this condition to be imposed.
