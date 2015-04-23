@@ -24,7 +24,7 @@ Four new parameters in the .init file allow for use of a breeding window and rel
 
 2: "always_breed_window" is a boolean parameter, which if specified in the .init file will ensure that a breeding window is used every single time an offspring is created. Otherwise, the breeding window will only be used if a male cannot be found in the focal patch containing the female.
 
-3: "breeding_kernel" takes the same format as "dispersal_kernel" above, except that these probabilities are the forward probabilities that any other nearby patch would have of contributing a father to the focal patch. Within the code, these probabilities are then normalized based on the number of males present at any given time in the potential patches.
+3: "breeding_kernel" takes the same format as "dispersal_kernel" above, except that these probabilities are the forward probabilities that any other nearby patch would have of contributing a father to the focal patch. Fathers do not move among patches at this step but instead act as if sending gametes to the female's location. Within the code, the forward probabilities are normalized based on the number of males present at any given time in the potential patches.
 
 4: "breeding_connectivity_matrix" takes the same format as "dispersal_connectivity_matrix" above, and contains the patch IDs of all patches within the breeding window, corresponding to the probabilities provided in "breeding_kernel".
 
