@@ -223,7 +223,7 @@ void TProtoDeletMutations_bitstring::set_effects()
   
   for(unsigned int i = 0; i < _nb_locus; ++i){
     
-    if(RAND::Uniform()>0.3) {   // remove "rand()" by Remi, better to use built-in RAND::Uniform()
+    if(RAND::Uniform()>0.03) {   // remove "rand()" by Remi, better to use built-in RAND::Uniform()
       _effects[1][i] = 1;
       _effects[0][i] = 0;
     } else {
