@@ -583,7 +583,7 @@ void LCE_Breed::execute()
         
           father = this->getFatherPtr(fatherPatch, mother, indexOfMother);
 
-cout << i << " " << fatherPatchID << endl;
+//cout << i << " " << fatherPatchID << endl;
 				//	cout << "# how many males in father patch  = " << fatherPatch->size(MAL, ADLTx) << endl;
 				//	cout << "# how many females in focal patch  = " << patch->size(FEM, ADLTx) << endl;
 
