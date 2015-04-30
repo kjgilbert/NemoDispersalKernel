@@ -480,8 +480,10 @@ void LCE_Breed::execute()
 		  // this calls "checkNoSelfing" function in line 93 of this file which is defined in LCEbreed.h
 		  //	checkNoSelfing returns true if it counts >0 females and >0 males in a patch 	
 
+cout << "\n num females " << patch->size(FEM, ADLTx) << " num males " << patch->size(MAL, ADLTx) << endl;
+
     if( !checkMatingCondition(patch) ) {    // if breedWindow is true (=1) then will always use the breeding window regardless of any males in focal patch
-		                                    // find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
+cout << "enter breed window" << endl;		                                    // find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
 		breedWindow = 1;                    // to use below when I tell it to actually use the breeding window function, 1=true
         bool malePresent = 0;               // if no one in the focal patch, find a nearby male to mate with; false = 0, true = 1
 		
