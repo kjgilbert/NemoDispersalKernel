@@ -25,7 +25,8 @@ EDITED*
 !src/LCEdisperse.cc
 !src/param.h
 !src/param.cc
-
+!src/individual.h
+!src/individual.cc
 
 !Readme.md
 !.gitignore
