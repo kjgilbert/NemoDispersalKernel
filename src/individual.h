@@ -59,7 +59,7 @@ private:
   /**Parents pointers.*/
   Individual *_mother, *_father;
   /**Natal Patch tag.*/
-  unsigned short _home;
+  unsigned int _home;
   /**Pedigree class of the individual. 
     - 0: parents are from different demes.\
     - 1: parents are from the same deme but unrelated.\
@@ -108,7 +108,7 @@ public:
   void            setMotherID            (unsigned long value)  {_motherID = value;}
   void            setFather              (Individual* f)        {_father = f;}
   void            setMother              (Individual* m)        {_mother = m;}
-  void            setHome                (unsigned short value) {_home = value;}
+  void            setHome                (unsigned int value) {_home = value;}
   void            setSex                 (sex_t sex)            {_sex = sex;}
   void            setCurrentID           (unsigned long value)  {currentID = value;}
   void            setIsSelfed            (bool s)               {_pedigreeClass = (s ? 4 : 0);}
@@ -125,7 +125,7 @@ public:
   unsigned long   getMotherID            ()                      {return _motherID;}
   Individual*     getFather              ()                      {return _father;}
   Individual*     getMother              ()                      {return _mother;}
-  unsigned short  getHome                ()                      {return _home;}
+  unsigned int   getHome                ()                      {return _home;}
   sex_t           getSex                 ()                      {return _sex;}
   bool            isFemale               ()                      {return (_sex == FEM);}
   bool            getIsSelfed            ()                      {return (_pedigreeClass == 4);}

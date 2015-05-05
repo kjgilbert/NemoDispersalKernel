@@ -105,7 +105,7 @@ void Individual::store_data ( BinaryStorageBuffer* saver )
   saver->store(&_motherID, sizeof(unsigned long));
   saver->store(&_fatherID, sizeof(unsigned long));
   saver->store(&_sex, sizeof(sex_t));
-  saver->store(&_home, sizeof(unsigned short));
+  saver->store(&_home, sizeof(unsigned int));
   saver->store(&_matings, 2*sizeof(unsigned short));
   saver->store(&_realizedFecundity, 2*sizeof(unsigned short));
   //saver->store(&_pedigreeClass, 1);
@@ -120,7 +120,7 @@ void Individual::retrieve_data ( BinaryStorageBuffer* reader )
   reader->read(&_motherID, sizeof(unsigned long));
   reader->read(&_fatherID, sizeof(unsigned long));
   reader->read(&_sex, sizeof(sex_t));
-  reader->read(&_home, sizeof(unsigned short));
+  reader->read(&_home, sizeof(unsigned int));
   reader->read(&_matings, 2*sizeof(unsigned short));
   reader->read(&_realizedFecundity, 2*sizeof(unsigned short));
 //reader->read(&_pedigreeClass, 1);
