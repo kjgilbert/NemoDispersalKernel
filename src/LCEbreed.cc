@@ -483,13 +483,36 @@ void LCE_Breed::execute()
 		  //	checkNoSelfing returns true if it counts >0 females and >0 males in a patch 	
 
     if( !checkMatingCondition(patch) ) {    // if breedWindow is true (=1) then will always use the breeding window regardless of any males in focal patch
+		// this function changes based on the mating system chosen, if rand mating, line 168 LCEbreed.h returns true if no males and no females in patch; if mating system 4 (herms w/ random mating and selfing, line 192 LCEbreed.h) then empties patch of any males and returns true if the number of females in the patch is greater than 0
 		                                    // find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
 		breedWindow = 1;                    // to use below when I tell it to actually use the breeding window function, 1=true
+        hermBreedWindow = 1;
         bool malePresent = 0;               // if no one in the focal patch, find a nearby male to mate with; false = 0, true = 1
 		
 		  // _reducedBreedMat has the IDs
 		  // _reducedBreedMatProbs has the probabilities
+		  
+		  // NEW CODE TO ONLY WORK FOR HERMAPHRODITES
+		unsigned int lengthAimedList = _reducedBreedMat[0][i].size();       // gives the length of a row in the matrix
 
+		for(unsigned int j = 0; j < lengthAimedList; j++ ) {                // recheck patch 0 here, if we enter this loop, no males will be there, but just easier to do anyway
+			
+			checkFatherPatch = _popPtr->getPatch(_reducedBreedMat[0][i][j] - 1); // check the next patch in the list based on its universal patch ID stored in that row (i) of the connectivity matrix, minus one because C++ goes 0 to n-1 and the matrix goes 1 to n
+	    	unsigned int numParents = checkFatherPatch->size(FEM, ADLTx);
+	    	
+	    	if((numParents > 1 && j == 0) || (numParents > 0 && j != 0)){   //in the focal patch (j=0, need more than one female to mate unless there's selfing; in the breed window (j!=0) need any females to mate (unless selfing)
+	    	    
+	    	    malePresent = 1; // actually a female, but it is going to be the "dad" for hermaphrodites
+	    	    break;
+	    	    
+	    	} else if(numParents == 1 && j == 0 && doSelfing){
+	    	    continue;													// if selfing is allowed, one parent is fine
+	    	}
+		}
+	}
+		  
+// this code worked for male and female sexes		  
+/*
 		unsigned int lengthAimedList = _reducedBreedMat[0][i].size();       // gives the length of a row in the matrix
 
 		for(unsigned int j = 0; j < lengthAimedList; j++ ) {                // recheck patch 0 here, if we enter this loop, no males will be there, but just easier to do anyway
@@ -505,7 +528,7 @@ void LCE_Breed::execute()
 		     // if finds no males, should still have "male_present = 0" here
         if( !malePresent && !doSelfing ) continue;
      }
- 
+*/ 
     unsigned int cnt =0;
     for(unsigned int size = patch->size(FEM, ADLTx), indexOfMother = 0;
         indexOfMother < size;
@@ -575,9 +598,6 @@ void LCE_Breed::execute()
            double randNum = RAND::Uniform();  // maybe check that this isn't the default rand num generator, but is instead one made for nemo 
            
            while(c < lengthBreedKernel) {
-   cout << "males in focal patch " << checkPatch->size(MAL, ADLTx) << " females in focal patch " << checkPatch->size(FEM, ADLTx) << endl;
-   cout << "breed kernel length " << lengthBreedKernel << endl;
-   cout << "rand Num " << randNum << endl;
          
               if(randNum < cumSums[c]) {
                  fatherPatchID = _reducedBreedMat[0][i][c] - 1; // to get the universal patch ID
@@ -607,7 +627,7 @@ void LCE_Breed::execute()
 		   delete [] cumSums;     
 
 		} else if(hermBreedWindow){ 	// true if hermwindow=1
-	cout << "enter herm breed window" << endl;	
+	cout << "# enter herm breed window" << endl;	
 			// males are all actually females here, just don't change param names for continuity
 		    unsigned int lengthBreedKernel = _reducedBreedMatProbs[0][0].size();
             unsigned int *arrayNumMales = new unsigned int [lengthBreedKernel]; // empty array to fill in number of males per patch
@@ -672,11 +692,17 @@ void LCE_Breed::execute()
           fatherPatch = _popPtr->getPatch(fatherPatchID);
         
           father = this->getFatherPtr(fatherPatch, mother, indexOfMother);
+          
+          cout << "mother " << mother << " father " << father << endl;
 
-//cout << i << " " << fatherPatchID << endl;
-				//	cout << "# how many males in father patch  = " << fatherPatch->size(MAL, ADLTx) << endl;
-				//	cout << "# how many females in focal patch  = " << patch->size(FEM, ADLTx) << endl;
-
+           
+           // ADD IF STUFF HERE ABOUT SELFING
+           if(mother == father && !doSelfing){	// if it tries to pick itself as a mate and have not set selfing to happen, do the following
+               
+               // make sure there's at least more than oneself to pick as a mate, if not quit loop or self, depending
+               
+           }
+           
 
 		   delete[] arrayNumMales; 
 		   delete [] numerator;
