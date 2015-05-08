@@ -481,52 +481,62 @@ void LCE_Breed::execute()
         if(mate_sys == 4) hermBreedWindow = 1;						// for random mating of hermaphrodites
 	}
 
-    if( (_paramSet->isSet("never_breed_window")) && !checkMatingCondition(patch) && !doSelfing) continue;
+	int mate_sys = (int)this->get_parameter_value("mating_system");
+
+	if(mate_sys == 4){	// then we have hermaphrodites
+
+		unsigned int numMoms = patch->size(FEM, ADLTx);
+cout << "# num moms " << numMoms << endl;
+    	if( (_paramSet->isSet("never_breed_window")) && numMoms == 1 && !doSelfing) continue;
+    	  // if no other females and we never want to use the breeding window and we're not allowing selfing, nemo behaves like the old version and exits loop and continue through code
+		  // this calls "checkNoSelfing" function in line 93 of this file which is defined in LCEbreed.h
+		  //	checkNoSelfing returns true if it counts >0 females and >0 males in a patch 		
+		
+		if(numMoms == 0) continue;								// no mother means no one can mate
+		if(numMoms == 1 && !doSelfing){							// one mother means need breed window unless we're selfing
+			bool malePresent = 0;               // if no one in the focal patch, find a nearby male to mate with; false = 0, true = 1
+	 		
+	 cout << "# check herm search mate" << endl;  
+			
+			unsigned int lengthAimedList = _reducedBreedMat[0][i].size();       // gives the length of a row in the matrix of possible breeding patches
+
+			for(unsigned int j = 1; j < lengthAimedList; j++ ) {                // start from patch 1, not the focal, because have already checked if there are other females in the focal
+		
+				checkFatherPatch = _popPtr->getPatch(_reducedBreedMat[0][i][j] - 1); // check the next patch in the list based on its universal patch ID stored in that row (i) of the connectivity matrix, minus one because C++ goes 0 to n-1 and the matrix goes 1 to n
+				if( checkMatingCondition(checkFatherPatch) ){
+					malePresent = 1; // actually a female, but it is going to be the "dad" for hermaphrodites
+					break;		
+				}
+								
+			}   // end for loop through list of patches to look for mates
+			if( malePresent ) hermBreedWindow = 1;        // unless forced by always_breed_window, we only enter the breed window when this condition is met, i.e. one female in focal patch, and at least one potential mate elsewhere
+			if( !malePresent && !doSelfing ) continue;
+
+		}		// end if for only 1 mom and no selfing
+
+		if(numMoms > 1){										// multiple mothers mean only breed window if forced
+			// with multiple potential moms, we don't enter the breed window unless forced. Selfing should not occur unless mating_proportion > 0
+			if(_paramSet->isSet("always_breed_window")) hermBreedWindow = 1;
+			//if not forcing breed window and there are multiple moms, mating will occur randomly in the patch and include selfing as oer vanilla nemo, from mating proportion
+		}			
+	}		  // end if for mating system 4, hermaphrodites/selfing
+
+	if(mate_sys == 1){
+   		
+   		if( (_paramSet->isSet("never_breed_window")) && !checkMatingCondition(patch) && !doSelfing) continue;
     	  // if no males and we never want to use the breeding window and we're not allowing selfing, nemo behaves like the old version and exits loop and continue through code
 		  // this calls "checkNoSelfing" function in line 93 of this file which is defined in LCEbreed.h
 		  //	checkNoSelfing returns true if it counts >0 females and >0 males in a patch 	
 
-    if( !checkMatingCondition(patch) ) {    // if breedWindow is true (=1) then will always use the breeding window regardless of any males in focal patch
-		  // this function changes based on the mating system chosen, if rand mating, line 168 LCEbreed.h returns true if no males and no females in patch; if mating system 4 (herms w/ random mating and selfing, line 192 LCEbreed.h) then empties patch of any males and returns true if the number of females in the patch is greater than 0
-		                                    // find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
-        bool malePresent = 0;               // if no one in the focal patch, find a nearby male to mate with; false = 0, true = 1
+		if( !checkMatingCondition(patch) ) {    // if breedWindow is true (=1) then will always use the breeding window regardless of any males in focal patch
+			  // this function changes based on the mating system chosen, if rand mating, line 168 LCEbreed.h returns true if no males and no females in patch; if mating system 4 (herms w/ random mating and selfing, line 192 LCEbreed.h) then empties patch of any males and returns true if the number of females in the patch is greater than 0
+												// find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
+			bool malePresent = 0;               // if no one in the focal patch, find a nearby male to mate with; false = 0, true = 1
 		
-		  // _reducedBreedMat has the IDs
-		  // _reducedBreedMatProbs has the probabilities
-	  	int mate_sys = (int)this->get_parameter_value("mating_system");
-
-		if(mate_sys == 4){	// then we have hermaphrodites
-		  
-		    hermBreedWindow = 1;
-
-			unsigned int lengthAimedList = _reducedBreedMat[0][i].size();       // gives the length of a row in the matrix
-
-			for(unsigned int j = 0; j < lengthAimedList; j++ ) {                // recheck patch 0 here, if we enter this loop, no males will be there, but just easier to do anyway
-			
-				checkFatherPatch = _popPtr->getPatch(_reducedBreedMat[0][i][j] - 1); // check the next patch in the list based on its universal patch ID stored in that row (i) of the connectivity matrix, minus one because C++ goes 0 to n-1 and the matrix goes 1 to n
-				unsigned int numParents = checkFatherPatch->size(FEM, ADLTx);
-			
-                 // make sure there's at least more than oneself to pick as a mate, if not quit loop or self, depending
-				if( (numParents > 1 && j == 0) || (numParents > 0 && j != 0) ){   //in the focal patch (j=0, need more than one female to mate unless there's selfing; in the breed window (j!=0) need any females to mate (unless selfing)
-				
-					malePresent = 1; // actually a female, but it is going to be the "dad" for hermaphrodites
-					break;
-				
-				} else if(numParents == 1 && j == 0 && doSelfing){
-					
-					malePresent = 1; // actually a female, but it is going to be the "dad" for hermaphrodites
-					break;													// if selfing is allowed, one parent is fine
-				}				
-			}  // end for loop through list of patches to look for mates
-			   // if finds no other females, should still have "male_present = 0" here, and unless are selfing, no mating will occur, so continue
-			if( !malePresent && !doSelfing ) continue;
-			
-		  }   // end if for mating system 4, hermaphrodites/selfing
-		  
-		  
-		  if(mate_sys == 1){
-		  
-		  		breedWindow = 1;                    // to use below when I tell it to actually use the breeding window function, 1=true
+			  // _reducedBreedMat has the IDs
+			  // _reducedBreedMatProbs has the probabilities
+		cout << "check sexes search mate" << endl;  
+	  
 
 		  		unsigned int lengthAimedList = _reducedBreedMat[0][i].size();       // gives the length of a row in the matrix
 
@@ -541,10 +551,11 @@ void LCE_Breed::execute()
 					 }
 				}    // end for loop, if enter the if statement, should leave for loop early with malePresent = 1;
 					 // if finds no males, should still have "male_present = 0" here
+				if( malePresent ) breedWindow = 1;                    // to use below when I tell it to actually use the breeding window function, 1=true
 				if( !malePresent && !doSelfing ) continue;
 
-		  }   // end if for mating system 1, random mating
-	}         // end if for check mating condition
+		  }   // end if for check mating condition
+	}         // end if for mating system 1, random mating
 		  
 		   
     unsigned int cnt =0;
@@ -554,14 +565,6 @@ void LCE_Breed::execute()
     {
       mother = patch->get(FEM, ADLTx, indexOfMother);
       
-  /*    int mate_sys = (int)this->get_parameter_value("mating_system");
-      if(mate_sys == 4){	// then we have hermaphrodites
-   
-          breedWindow = 0;
-          hermBreedWindow = 1;
-          
-      } */ // get rid of this code now because I've updated the above "look for mate" and "always breed window" functions to account for this
-
       nbBaby = (unsigned int)mother->setFecundity( getFecundity(i) ) ; //allows for patch-specific fec
       
       cnt += nbBaby;
