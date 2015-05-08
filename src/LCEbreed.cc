@@ -471,7 +471,8 @@ void LCE_Breed::execute()
 	if( !patch->size(FEM, ADLTx) ) continue; // if true, exit breeding, true when =1, =1 if !=0, !=0 means there are no females in the patch because returns 0 after the '!'
 
     doSelfing = 0;    // set defaults
-    breedWindow = 0;  
+    breedWindow = 0; 
+    hermBreedWindow = 0; 
     if(_paramSet->isSet("self_if_alone")) doSelfing = 1;           // only change defaults if specified from init file
     if(_paramSet->isSet("always_breed_window")) breedWindow = 1;   // 
 
@@ -511,14 +512,22 @@ void LCE_Breed::execute()
     {
       mother = patch->get(FEM, ADLTx, indexOfMother);
       
+      int mate_sys = (int)this->get_parameter_value("mating_system");
+      if(mate_sys == 4){	// then we have hermaphrodites
+   
+          breedWindow = 0;
+          hermBreedWindow = 1;
+          
+      }
+
       nbBaby = (unsigned int)mother->setFecundity( getFecundity(i) ) ; //allows for patch-specific fec
       
       cnt += nbBaby;
       //-----------------------------------------------------------------------
       while(nbBaby != 0) {
-      
+
          if(breedWindow){    // then find the other patch that the father comes from
- 
+ cout << "enter breed window" << endl;
             unsigned int lengthBreedKernel = _reducedBreedMatProbs[0][0].size();
             unsigned int *arrayNumMales = new unsigned int [lengthBreedKernel]; // empty array to fill in number of males per patch
             double *numerator = new double [lengthBreedKernel];
@@ -565,7 +574,10 @@ void LCE_Breed::execute()
            double randNum = RAND::Uniform();  // maybe check that this isn't the default rand num generator, but is instead one made for nemo 
            
            while(c < lengthBreedKernel) {
-           
+   cout << "males in focal patch " << checkPatch->size(MAL, ADLTx) << " females in focal patch " << checkPatch->size(FEM, ADLTx) << endl;
+   cout << "breed kernel length " << lengthBreedKernel << endl;
+   cout << "rand Num " << randNum << endl;
+         
               if(randNum < cumSums[c]) {
                  fatherPatchID = _reducedBreedMat[0][i][c] - 1; // to get the universal patch ID
                                   
@@ -593,6 +605,83 @@ void LCE_Breed::execute()
 		   delete [] normalBreedKernel;  
 		   delete [] cumSums;     
 
+		} else if(hermBreedWindow){ 	// true if hermwindow=1
+	cout << "enter herm breed window" << endl;	
+			// males are all actually females here, just don't change param names for continuity
+		    unsigned int lengthBreedKernel = _reducedBreedMatProbs[0][0].size();
+            unsigned int *arrayNumMales = new unsigned int [lengthBreedKernel]; // empty array to fill in number of males per patch
+            double *numerator = new double [lengthBreedKernel];
+            double *normalBreedKernel = new double [lengthBreedKernel];
+            double denominator = 0;
+
+                 // normalize mating probabilities into backwards migration rates
+
+           for(unsigned int k = 0; k < lengthBreedKernel; k++){               // lengthAimedList is the same length as the breeding window
+
+               checkPatch = _popPtr->getPatch(_reducedBreedMat[0][i][k] - 1); // check the patch being iterated - this should be the patch's ID number relative to the whole landscape, - 1 because input is +1 vs what C++ calls the universal patch ID
+
+               arrayNumMales[k] = checkPatch->size(FEM, ADLTx);               // put that number in the respective spot in the new array
+
+               numerator[k] = (checkPatch->size(FEM, ADLTx))*(_reducedBreedMatProbs[0][0][k]);
+
+               denominator += numerator[k];
+               
+           }   // end for loop finding number of males per aimed patch
+
+               // have to iterate through to divide an array by a single number
+           for(unsigned int k = 0; k < lengthBreedKernel; k++){ 
+            
+             normalBreedKernel[k] = numerator[k] / denominator;  // numerator is an array, denominator is a number
+
+           }
+        
+             // draw a random number between 0 and 1, see what patch that picks probability-wise
+             // some spots in the array will be zero, so should never be picked because there are no males there
+           
+           double sumProbs = 0;
+           double *cumSums = new double [lengthBreedKernel];
+           double total = 0;
+           
+           for(unsigned int k = 0; k < lengthBreedKernel; k++) {
+              
+              total += normalBreedKernel[k];
+              cumSums[k] = total;
+           
+           }
+           
+           unsigned int c = 0;
+           unsigned int fatherPatchID;
+           double randNum = RAND::Uniform();  // maybe check that this isn't the default rand num generator, but is instead one made for nemo 
+           
+           while(c < lengthBreedKernel) {
+         
+              if(randNum < cumSums[c]) {
+                 fatherPatchID = _reducedBreedMat[0][i][c] - 1; // to get the universal patch ID
+                                  
+				//	cout << i << " " << _reducedBreedMat[0][i][c] << endl;
+
+                 break; // this breaks out of the whole while loop, c won't iterate up
+              } 
+              c++;
+           }
+           
+           assert(c < lengthBreedKernel); // if somehow the function above doesn't work, this means it didn't find a box with the probability matching the rand number and c became greater than length of disp kernel      
+               // if this happens, probably when one patch has super high prob vs others, and in that case cn add code to fix because that patch is probably the one to choose from
+ 
+          fatherPatch = _popPtr->getPatch(fatherPatchID);
+        
+          father = this->getFatherPtr(fatherPatch, mother, indexOfMother);
+
+//cout << i << " " << fatherPatchID << endl;
+				//	cout << "# how many males in father patch  = " << fatherPatch->size(MAL, ADLTx) << endl;
+				//	cout << "# how many females in focal patch  = " << patch->size(FEM, ADLTx) << endl;
+
+
+		   delete[] arrayNumMales; 
+		   delete [] numerator;
+		   delete [] normalBreedKernel;  
+		   delete [] cumSums;  
+		   
         } else {  // get the father from the focal patch - will not reach here if no selfing and no male present in focal patch
         	//	cout << "# only get here if no breed window and/or selfing is possible" << endl;
                   // breeding window is not happening, = 0, one of 2 things happens, normal nemo with a male in the patch, or if no male then we self
