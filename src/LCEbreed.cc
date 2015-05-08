@@ -491,44 +491,48 @@ void LCE_Breed::execute()
 		
 		  // _reducedBreedMat has the IDs
 		  // _reducedBreedMatProbs has the probabilities
+		  int mate_sys = (int)this->get_parameter_value("mating_system");
+	  
+		  if(mate_sys == 4){	// then we have hermaphrodites
 		  
-		  // NEW CODE TO ONLY WORK FOR HERMAPHRODITES
-		unsigned int lengthAimedList = _reducedBreedMat[0][i].size();       // gives the length of a row in the matrix
+			unsigned int lengthAimedList = _reducedBreedMat[0][i].size();       // gives the length of a row in the matrix
 
-		for(unsigned int j = 0; j < lengthAimedList; j++ ) {                // recheck patch 0 here, if we enter this loop, no males will be there, but just easier to do anyway
+			for(unsigned int j = 0; j < lengthAimedList; j++ ) {                // recheck patch 0 here, if we enter this loop, no males will be there, but just easier to do anyway
 			
-			checkFatherPatch = _popPtr->getPatch(_reducedBreedMat[0][i][j] - 1); // check the next patch in the list based on its universal patch ID stored in that row (i) of the connectivity matrix, minus one because C++ goes 0 to n-1 and the matrix goes 1 to n
-	    	unsigned int numParents = checkFatherPatch->size(FEM, ADLTx);
-	    	
-	    	if((numParents > 1 && j == 0) || (numParents > 0 && j != 0)){   //in the focal patch (j=0, need more than one female to mate unless there's selfing; in the breed window (j!=0) need any females to mate (unless selfing)
-	    	    
-	    	    malePresent = 1; // actually a female, but it is going to be the "dad" for hermaphrodites
-	    	    break;
-	    	    
-	    	} else if(numParents == 1 && j == 0 && doSelfing){
-	    	    continue;													// if selfing is allowed, one parent is fine
-	    	}
-		}
-	}
+				checkFatherPatch = _popPtr->getPatch(_reducedBreedMat[0][i][j] - 1); // check the next patch in the list based on its universal patch ID stored in that row (i) of the connectivity matrix, minus one because C++ goes 0 to n-1 and the matrix goes 1 to n
+				unsigned int numParents = checkFatherPatch->size(FEM, ADLTx);
+			
+				if((numParents > 1 && j == 0) || (numParents > 0 && j != 0)){   //in the focal patch (j=0, need more than one female to mate unless there's selfing; in the breed window (j!=0) need any females to mate (unless selfing)
+				
+					malePresent = 1; // actually a female, but it is going to be the "dad" for hermaphrodites
+					break;
+				
+				} else if(numParents == 1 && j == 0 && doSelfing){
+					continue;													// if selfing is allowed, one parent is fine
+				}
+			} // end for loop through list of patches to look for mates
+		  }   // end if for mating system 4, hermaphrodites/selfing
+		
+		  if(mate_sys == 1){
+		  		unsigned int lengthAimedList = _reducedBreedMat[0][i].size();       // gives the length of a row in the matrix
+
+				for(unsigned int j = 0; j < lengthAimedList; j++ ) {                // recheck patch 0 here, if we enter this loop, no males will be there, but just easier to do anyway
+
+					checkFatherPatch = _popPtr->getPatch(_reducedBreedMat[0][i][j] - 1); // check the next patch in the list based on its universal patch ID stored in that row (i) of the connectivity matrix, minus one because C++ goes 0 to n-1 and the matrix goes 1 to n
+
+					if( checkMatingCondition(checkFatherPatch) ) { // if there IS a male in the patch being checked (checkMatCond is boolean)
+											//first patch you find with >0 males changes male_present to TRUE
+						 malePresent = 1;   // then change to true, and loop should stop searching, and we proceed onward to breeding 
+						 break;             // BREAK OUT OF THE FOR LOOP IF FIND ANY 1 MALE 
+					 }
+				}    // end for loop, if enter the if statement, should leave for loop early with malePresent = 1;
+					 // if finds no males, should still have "male_present = 0" here
+				if( !malePresent && !doSelfing ) continue;
+
+		  }   // end if for mating system 1, random mating
+	}         // end if for check mating condition
 		  
-// this code worked for male and female sexes		  
-/*
-		unsigned int lengthAimedList = _reducedBreedMat[0][i].size();       // gives the length of a row in the matrix
-
-		for(unsigned int j = 0; j < lengthAimedList; j++ ) {                // recheck patch 0 here, if we enter this loop, no males will be there, but just easier to do anyway
-
-			checkFatherPatch = _popPtr->getPatch(_reducedBreedMat[0][i][j] - 1); // check the next patch in the list based on its universal patch ID stored in that row (i) of the connectivity matrix, minus one because C++ goes 0 to n-1 and the matrix goes 1 to n
-
-			if( checkMatingCondition(checkFatherPatch) ) { // if there IS a male in the patch being checked (checkMatCond is boolean)
-					                //first patch you find with >0 males changes male_present to TRUE
-				 malePresent = 1;   // then change to true, and loop should stop searching, and we proceed onward to breeding 
-				 break;             // BREAK OUT OF THE FOR LOOP IF FIND ANY 1 MALE 
-		     }
-		}    // end for loop, if enter the if statement, should leave for loop early with malePresent = 1;
-		     // if finds no males, should still have "male_present = 0" here
-        if( !malePresent && !doSelfing ) continue;
-     }
-*/ 
+		   
     unsigned int cnt =0;
     for(unsigned int size = patch->size(FEM, ADLTx), indexOfMother = 0;
         indexOfMother < size;
