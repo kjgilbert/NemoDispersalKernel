@@ -475,7 +475,10 @@ void LCE_Breed::execute()
     breedWindow = 0; 
     hermBreedWindow = 0; 
     if(_paramSet->isSet("self_if_alone")) doSelfing = 1;           // only change defaults if specified from init file
-    if(_paramSet->isSet("always_breed_window")) breedWindow = 1;   // 
+    if(_paramSet->isSet("always_breed_window")){
+        breedWindow = 1;
+        hermBreedWindow = 1;
+	}
 
     if( (_paramSet->isSet("never_breed_window")) && !checkMatingCondition(patch) && !doSelfing) continue;
     	  // if no males and we never want to use the breeding window and we're not allowing selfing, nemo behaves like the old version and exits loop and continue through code
@@ -502,17 +505,24 @@ void LCE_Breed::execute()
 				checkFatherPatch = _popPtr->getPatch(_reducedBreedMat[0][i][j] - 1); // check the next patch in the list based on its universal patch ID stored in that row (i) of the connectivity matrix, minus one because C++ goes 0 to n-1 and the matrix goes 1 to n
 				unsigned int numParents = checkFatherPatch->size(FEM, ADLTx);
 			
-				if((numParents > 1 && j == 0) || (numParents > 0 && j != 0)){   //in the focal patch (j=0, need more than one female to mate unless there's selfing; in the breed window (j!=0) need any females to mate (unless selfing)
+                 // make sure there's at least more than oneself to pick as a mate, if not quit loop or self, depending
+				if( (numParents > 1 && j == 0) || (numParents > 0 && j != 0) ){   //in the focal patch (j=0, need more than one female to mate unless there's selfing; in the breed window (j!=0) need any females to mate (unless selfing)
 				
 					malePresent = 1; // actually a female, but it is going to be the "dad" for hermaphrodites
 					break;
 				
 				} else if(numParents == 1 && j == 0 && doSelfing){
-					continue;													// if selfing is allowed, one parent is fine
-				}
-			} // end for loop through list of patches to look for mates
+					
+					malePresent = 1; // actually a female, but it is going to be the "dad" for hermaphrodites
+					break;													// if selfing is allowed, one parent is fine
+				}				
+			}  // end for loop through list of patches to look for mates
+			   // if finds no other females, should still have "male_present = 0" here, and unless are selfing, no mating will occur, so continue
+			if( !malePresent && !doSelfing ) continue;
+			
 		  }   // end if for mating system 4, hermaphrodites/selfing
-		
+		  
+		  
 		  if(mate_sys == 1){
 		  		unsigned int lengthAimedList = _reducedBreedMat[0][i].size();       // gives the length of a row in the matrix
 
@@ -540,13 +550,13 @@ void LCE_Breed::execute()
     {
       mother = patch->get(FEM, ADLTx, indexOfMother);
       
-      int mate_sys = (int)this->get_parameter_value("mating_system");
+  /*    int mate_sys = (int)this->get_parameter_value("mating_system");
       if(mate_sys == 4){	// then we have hermaphrodites
    
           breedWindow = 0;
           hermBreedWindow = 1;
           
-      }
+      } */ // get rid of this code now because I've updated the above "look for mate" and "always breed window" functions to account for this
 
       nbBaby = (unsigned int)mother->setFecundity( getFecundity(i) ) ; //allows for patch-specific fec
       
@@ -697,16 +707,36 @@ void LCE_Breed::execute()
         
           father = this->getFatherPtr(fatherPatch, mother, indexOfMother);
           
-          cout << "mother " << mother << " father " << father << endl;
+           cout << "mother1 " << mother << " father1 " << father << endl;
 
            
            // ADD IF STUFF HERE ABOUT SELFING
-           if(mother == father && !doSelfing){	// if it tries to pick itself as a mate and have not set selfing to happen, do the following
+           while(mother == father && !doSelfing){	// if it tries to pick itself as a mate and have not set selfing to happen, do the following
                
-               // make sure there's at least more than oneself to pick as a mate, if not quit loop or self, depending
-               
-           }
+               double randNum = RAND::Uniform();  // maybe check that this isn't the default rand num generator, but is instead one made for nemo 
            
+			   while(c < lengthBreedKernel) {
+		 
+				  if(randNum < cumSums[c]) {
+					 fatherPatchID = _reducedBreedMat[0][i][c] - 1; // to get the universal patch ID
+								  
+					//	cout << i << " " << _reducedBreedMat[0][i][c] << endl;
+
+					 break; // this breaks out of the whole while loop, c won't iterate up
+				  } 
+				  c++;
+			   }
+		   
+			   assert(c < lengthBreedKernel); // if somehow the function above doesn't work, this means it didn't find a box with the probability matching the rand number and c became greater than length of disp kernel      
+				   // if this happens, probably when one patch has super high prob vs others, and in that case cn add code to fix because that patch is probably the one to choose from
+ 
+			  fatherPatch = _popPtr->getPatch(fatherPatchID);
+		
+			  father = this->getFatherPtr(fatherPatch, mother, indexOfMother);
+ 
+           }
+              
+           cout << "mother2 " << mother << " father2 " << father << endl;
 
 		   delete[] arrayNumMales; 
 		   delete [] numerator;
