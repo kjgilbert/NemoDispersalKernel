@@ -486,7 +486,7 @@ void LCE_Breed::execute()
 	if(mate_sys == 4){	// then we have hermaphrodites
 
 		unsigned int numMoms = patch->size(FEM, ADLTx);
-cout << "# num moms " << numMoms << endl;
+
     	if( (_paramSet->isSet("never_breed_window")) && numMoms == 1 && !doSelfing) continue;
     	  // if no other females and we never want to use the breeding window and we're not allowing selfing, nemo behaves like the old version and exits loop and continue through code
 		  // this calls "checkNoSelfing" function in line 93 of this file which is defined in LCEbreed.h
@@ -495,9 +495,7 @@ cout << "# num moms " << numMoms << endl;
 		if(numMoms == 0) continue;								// no mother means no one can mate
 		if(numMoms == 1 && !doSelfing){							// one mother means need breed window unless we're selfing
 			bool malePresent = 0;               // if no one in the focal patch, find a nearby male to mate with; false = 0, true = 1
-	 		
-	 cout << "# check herm search mate" << endl;  
-			
+	 					
 			unsigned int lengthAimedList = _reducedBreedMat[0][i].size();       // gives the length of a row in the matrix of possible breeding patches
 
 			for(unsigned int j = 1; j < lengthAimedList; j++ ) {                // start from patch 1, not the focal, because have already checked if there are other females in the focal
@@ -534,9 +532,7 @@ cout << "# num moms " << numMoms << endl;
 			bool malePresent = 0;               // if no one in the focal patch, find a nearby male to mate with; false = 0, true = 1
 		
 			  // _reducedBreedMat has the IDs
-			  // _reducedBreedMatProbs has the probabilities
-		cout << "check sexes search mate" << endl;  
-	  
+			  // _reducedBreedMatProbs has the probabilities	  
 
 		  		unsigned int lengthAimedList = _reducedBreedMat[0][i].size();       // gives the length of a row in the matrix
 
@@ -572,7 +568,7 @@ cout << "# num moms " << numMoms << endl;
       while(nbBaby != 0) {
 
          if(breedWindow){    // then find the other patch that the father comes from
- cout << "enter breed window" << endl;
+
             unsigned int lengthBreedKernel = _reducedBreedMatProbs[0][0].size();
             unsigned int *arrayNumMales = new unsigned int [lengthBreedKernel]; // empty array to fill in number of males per patch
             double *numerator = new double [lengthBreedKernel];
@@ -648,7 +644,7 @@ cout << "# num moms " << numMoms << endl;
 		   delete [] cumSums;     
 
 		} else if(hermBreedWindow){ 	// true if hermwindow=1
-	cout << "# enter herm breed window" << endl;	
+
 			// males are all actually females here, just don't change param names for continuity
 		    unsigned int lengthBreedKernel = _reducedBreedMatProbs[0][0].size();
             unsigned int *arrayNumMales = new unsigned int [lengthBreedKernel]; // empty array to fill in number of males per patch
@@ -714,11 +710,7 @@ cout << "# num moms " << numMoms << endl;
         
           father = this->getFatherPtr(fatherPatch, mother, indexOfMother);
           
-           cout << "mother1 " << mother << " father1 " << father << endl;
-
-           
-           // ADD IF STUFF HERE ABOUT SELFING
-           while(mother == father && !doSelfing){	// if it tries to pick itself as a mate and have not set selfing to happen, do the following
+          while(mother == father && !doSelfing){	// if it tries to pick itself as a mate and have not set selfing to happen, do the following
                
                double randNum = RAND::Uniform();  // maybe check that this isn't the default rand num generator, but is instead one made for nemo 
            
@@ -743,8 +735,6 @@ cout << "# num moms " << numMoms << endl;
  
            }
               
-           cout << "mother2 " << mother << " father2 " << father << endl;
-
 		   delete[] arrayNumMales; 
 		   delete [] numerator;
 		   delete [] normalBreedKernel;  
