@@ -435,6 +435,7 @@ void LCE_Breed::execute()
   // Kim adding following params
   bool malePresent; // don't necessarily need this here if I create it with the declaration at the same time below
   bool breedWindow;
+  bool hermBreedWindow;
   bool doSelfing;
   Patch* fatherPatch;
   Patch* checkPatch;
