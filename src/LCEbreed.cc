@@ -476,8 +476,9 @@ void LCE_Breed::execute()
     hermBreedWindow = 0; 
     if(_paramSet->isSet("self_if_alone")) doSelfing = 1;           // only change defaults if specified from init file
     if(_paramSet->isSet("always_breed_window")){
-        breedWindow = 1;
-        hermBreedWindow = 1;
+		int mate_sys = (int)this->get_parameter_value("mating_system");
+        if(mate_sys == 1) breedWindow = 1;							// for random mating of sexes
+        if(mate_sys == 4) hermBreedWindow = 1;						// for random mating of hermaphrodites
 	}
 
     if( (_paramSet->isSet("never_breed_window")) && !checkMatingCondition(patch) && !doSelfing) continue;
@@ -486,18 +487,18 @@ void LCE_Breed::execute()
 		  //	checkNoSelfing returns true if it counts >0 females and >0 males in a patch 	
 
     if( !checkMatingCondition(patch) ) {    // if breedWindow is true (=1) then will always use the breeding window regardless of any males in focal patch
-		// this function changes based on the mating system chosen, if rand mating, line 168 LCEbreed.h returns true if no males and no females in patch; if mating system 4 (herms w/ random mating and selfing, line 192 LCEbreed.h) then empties patch of any males and returns true if the number of females in the patch is greater than 0
+		  // this function changes based on the mating system chosen, if rand mating, line 168 LCEbreed.h returns true if no males and no females in patch; if mating system 4 (herms w/ random mating and selfing, line 192 LCEbreed.h) then empties patch of any males and returns true if the number of females in the patch is greater than 0
 		                                    // find a patch in the breeding kernel that contains a male, as long as find at least one, exit loop and go to next step
-		breedWindow = 1;                    // to use below when I tell it to actually use the breeding window function, 1=true
-        hermBreedWindow = 1;
         bool malePresent = 0;               // if no one in the focal patch, find a nearby male to mate with; false = 0, true = 1
 		
 		  // _reducedBreedMat has the IDs
 		  // _reducedBreedMatProbs has the probabilities
-		  int mate_sys = (int)this->get_parameter_value("mating_system");
-	  
-		  if(mate_sys == 4){	// then we have hermaphrodites
+	  	int mate_sys = (int)this->get_parameter_value("mating_system");
+
+		if(mate_sys == 4){	// then we have hermaphrodites
 		  
+		    hermBreedWindow = 1;
+
 			unsigned int lengthAimedList = _reducedBreedMat[0][i].size();       // gives the length of a row in the matrix
 
 			for(unsigned int j = 0; j < lengthAimedList; j++ ) {                // recheck patch 0 here, if we enter this loop, no males will be there, but just easier to do anyway
@@ -524,6 +525,9 @@ void LCE_Breed::execute()
 		  
 		  
 		  if(mate_sys == 1){
+		  
+		  		breedWindow = 1;                    // to use below when I tell it to actually use the breeding window function, 1=true
+
 		  		unsigned int lengthAimedList = _reducedBreedMat[0][i].size();       // gives the length of a row in the matrix
 
 				for(unsigned int j = 0; j < lengthAimedList; j++ ) {                // recheck patch 0 here, if we enter this loop, no males will be there, but just easier to do anyway
