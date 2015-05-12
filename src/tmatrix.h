@@ -42,6 +42,7 @@
 #include <string>
 #include <assert.h>
 #include "output.h"
+#include <iostream> // added by Kim
 
 using namespace std;
 
@@ -49,7 +50,9 @@ using namespace std;
 class TMatrix {
 private:
   
-  unsigned int _rows, _cols, _length;
+//  unsigned int _rows, _cols, _length; // original nemo
+  unsigned int _rows, _cols; // added
+  unsigned long int _length; // added
   
   double* _val;
   
@@ -85,6 +88,7 @@ public:
   /**Assigns a value to all element of the matrix.*/
   void assign (double val)
   {
+  	cout << " value? " << val << " rows " << _rows << " cols " <<_cols << " length " << _length <<endl;
     for(unsigned int i = 0; i < _length; ++i) _val[i] = val;
   }
   /**Re-allocate the existing matrix with assigned rows and cols dimensions**/
