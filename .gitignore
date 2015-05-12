@@ -27,6 +27,7 @@ EDITED*
 !src/param.cc
 !src/individual.h
 !src/individual.cc
+!src/tmatrix.h
 
 !Readme.md
 !.gitignore
