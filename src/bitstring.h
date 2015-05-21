@@ -281,7 +281,9 @@ public:
       //copy words in-between:
       size_t k = start_w + 1;
       
-      memcpy(&b._data[k], &_data[k], (end_w - k)*sizeof(_ul));
+//      memcpy(&b._data[k], &_data[k], (end_w - k)*sizeof(_ul)); // original bug version
+// fixed version:
+      memcpy(&_data[k], &b._data[k], (end_w - k)*sizeof(_ul));
       
 //      for(size_t k = start_w + 1; k < end_w; ++k) {
 //        
