@@ -28,6 +28,7 @@ EDITED*
 !src/individual.h
 !src/individual.cc
 !src/tmatrix.h
+!src/bitstring.h
 
 !Readme.md
 !.gitignore
