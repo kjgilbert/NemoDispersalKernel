@@ -215,23 +215,23 @@ void TProtoDeletMutations_bitstring::set_effects()
   }
   
   _effects = new float* [2];
-  _effects[0] = new float [_nb_locus];
-  _effects[1] = new float [_nb_locus];
+  _effects[0] = new float [_nb_locus];		// heterozygote effects
+  _effects[1] = new float [_nb_locus];		// homozygote effects
   
   double dom;
   double k = -1.0*log(2*_dominance) / _strength;
   
-  for(unsigned int i = 0; i < _nb_locus; ++i){
+  for(unsigned int i = 0; i < _nb_locus; ++i){		// go through each locus and set its effects
     
     do{
       _effects[1][i] = (float)(this->*_set_effects_func)(); //homozygote effect: s
-    }while(_effects[1][i] > 1); //truncate distribution
+    }while(_effects[1][i] > 1); //truncate distribution		// we can add our truncation here as well, something like while _effects[1][i] > 1 && _effects[1][i] < _mutrate/10
     
     if(_dominance_model == 1)
       dom = exp(-1.0*_effects[1][i]*k)/2.0; //scaling of h on s
     else dom = _dominance;
     
-    _effects[0][i] = (float)(dom * _effects[1][i]); //heterozygote effect: hs
+    _effects[0][i] = (float)(dom * _effects[1][i]); //heterozygote effect: hs		// doesn't need modifying because it just depends on the homozygote effect which is set above
   }
   //set the TTDeletMutations global var:
   TTDeletMutations_bitstring::set_effects(_effects);
@@ -504,10 +504,10 @@ void TTDeletMutations_bitstring::set_viability_func_ptr (unsigned int f_model, b
 void TTDeletMutations_bitstring::set_mutation_func_ptr (unsigned int m_model)
 {  
   switch(m_model) {
-    case 1:
+    case 1:	// model 1 from manual, the location of each new mutation is drawn randomly irrespective of the presence of a mutation at that location
       _mutation_func_ptr = &TTDeletMutations_bitstring::mutate_noredraw;
       break;
-    case 2:
+    case 2:	// model 2 from manual, the location of a new mutation is redrawn each time it appears at a homozygous deleterious locus
       _mutation_func_ptr = &TTDeletMutations_bitstring::mutate_redraw;
       break;
   }
@@ -599,22 +599,22 @@ void TTDeletMutations_bitstring::inherit (TTrait* mother, TTrait* father)
 }
 
 // ----------------------------------------------------------------------------------------
-// mutate_redraw
+// mutate_redraw								NOT SURE WHAT THE DIFFERENCE IS HERE VS PLAIN 'MUTATE' BELOW
 // ----------------------------------------------------------------------------------------
 void TTDeletMutations_bitstring::mutate_redraw ()
 {
   unsigned int NbMut, mutLocus;
   
-  NbMut = (unsigned int)RAND::Poisson(_genomic_mut_rate);
+  NbMut = (unsigned int)RAND::Poisson(_genomic_mut_rate);	// draw a random poisson-distributed number based on the genomic mutation rate, and I think that is the number of mutations happening this generation
   
-  if( (int)_nb_hmz_mutations - (int)NbMut < 0 ) NbMut -= _nb_hmz_mutations;
+  if( (int)_nb_hmz_mutations - (int)NbMut < 0 ) NbMut -= _nb_hmz_mutations;		// DONT KNOW WHATS GOING ON, but decreases the total num of mutations by the num of homoz. mutations to do?
   
-  while(NbMut != 0) {  
+  while(NbMut != 0) {  	// go through and do each mutation
     
     do { 
-      mutLocus = RAND::Uniform( _nb_locus );
+      mutLocus = RAND::Uniform( _nb_locus );	// any locus is randomly picked with equal chance
       //check if the locus is not already homozygote:
-    } while( (*sequence[0])[mutLocus] && (*sequence[1])[mutLocus] );
+    } while( (*sequence[0])[mutLocus] && (*sequence[1])[mutLocus] );		// NOT SURE HOW THIS WORKS? OR THE FOLLOWING?
     
     if ( !( (*sequence[0])[mutLocus] || (*sequence[1])[mutLocus] ) )
       sequence[RAND::RandBool()]->set(mutLocus);
@@ -627,17 +627,17 @@ void TTDeletMutations_bitstring::mutate_redraw ()
   }
 }
 // ----------------------------------------------------------------------------------------
-// mutate
+// mutate									FIGURE OUT WHEN THIS IS CALLED VS THE ABOVE
 // ----------------------------------------------------------------------------------------
 void TTDeletMutations_bitstring::mutate_noredraw ()
 {
   unsigned int NbMut;
   
-  NbMut = (unsigned int)RAND::Poisson(_genomic_mut_rate);
+  NbMut = (unsigned int)RAND::Poisson(_genomic_mut_rate);		// total number of mutations to do in the generation
   
   while(NbMut != 0) {  
     
-    sequence[RAND::RandBool()]->set(  RAND::Uniform( _nb_locus ) );
+    sequence[RAND::RandBool()]->set(  RAND::Uniform( _nb_locus ) );		// draw a yes or no to then draw a rand uniform to do with number of loci?
     
     NbMut--;
   }
