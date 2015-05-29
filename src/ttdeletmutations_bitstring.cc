@@ -225,8 +225,8 @@ void TProtoDeletMutations_bitstring::set_effects()
     
     do{
       _effects[1][i] = (float)(this->*_set_effects_func)(); //homozygote effect: s
-    }while(_effects[1][i] > 1); //truncate distribution		// we can add our truncation here as well, something like while _effects[1][i] > 1 && _effects[1][i] < _mutrate/10
-    
+    }while(_effects[1][i] > 1 || _effects[1][i] < (get_parameter_value("delet_mutation_rate")/10)); //truncate distribution		// we can add our truncation here as well, something like while _effects[1][i] > 1 && _effects[1][i] < _mutrate/10
+ cout << "check mut rate / 10 " <<  get_parameter_value("delet_mutation_rate")/10 << endl;
     if(_dominance_model == 1)
       dom = exp(-1.0*_effects[1][i]*k)/2.0; //scaling of h on s
     else dom = _dominance;
@@ -637,7 +637,25 @@ void TTDeletMutations_bitstring::mutate_noredraw ()
   
   while(NbMut != 0) {  
     
-    sequence[RAND::RandBool()]->set(  RAND::Uniform( _nb_locus ) );		// draw a yes or no to then draw a rand uniform to do with number of loci?
+    int mut_locus = RAND::Uniform( _nb_locus );	// choose the locus that is going to mutate
+    int mut_chrom = RAND::RandBool();			// which chromosome of the two will we mutate
+    
+    // has it already mutated in the past?
+    if(sequence[mut_chrom]->getBit(mut_locus)) {
+    	// true if there is already a mutation there because that would =1
+    	
+    	// maybe backmutate (this has a reduced prob)
+		// draw a new rand num and if of some value, proceed with backmutation
+		if(RAND::Uniform() < 0.01){	// 1% of the time do a backmutation once we get here
+    		//backmutate:
+    		sequence[mut_chrom]->flip(mut_locus);	// change to the other number at that locus (0 to 1 or vice versa)
+    	}
+    } else {
+        // or forward mutate
+		sequence[mut_chrom]->set(mut_locus);
+    }
+        
+  //orig:  sequence[RAND::RandBool()]->set(  RAND::Uniform( _nb_locus ) );		// draw a yes or no to then draw a rand uniform to do with number of loci?
     
     NbMut--;
   }
