@@ -486,7 +486,7 @@ void LCE_Breed::execute()
 	if(mate_sys == 4){	// then we have hermaphrodites
 
 		unsigned int numMoms = patch->size(FEM, ADLTx);
-
+		
     	if( (_paramSet->isSet("never_breed_window")) && numMoms == 1 && !doSelfing) continue;
     	  // if no other females and we never want to use the breeding window and we're not allowing selfing, nemo behaves like the old version and exits loop and continue through code
 		  // this calls "checkNoSelfing" function in line 93 of this file which is defined in LCEbreed.h
@@ -505,7 +505,7 @@ void LCE_Breed::execute()
 					malePresent = 1; // actually a female, but it is going to be the "dad" for hermaphrodites
 					break;		
 				}
-								
+
 			}   // end for loop through list of patches to look for mates
 			if( malePresent ) hermBreedWindow = 1;        // unless forced by always_breed_window, we only enter the breed window when this condition is met, i.e. one female in focal patch, and at least one potential mate elsewhere
 			if( !malePresent && !doSelfing ) continue;
@@ -515,6 +515,7 @@ void LCE_Breed::execute()
 		if(numMoms > 1){										// multiple mothers mean only breed window if forced
 			// with multiple potential moms, we don't enter the breed window unless forced. Selfing should not occur unless mating_proportion > 0
 			if(_paramSet->isSet("always_breed_window")) hermBreedWindow = 1;
+
 			//if not forcing breed window and there are multiple moms, mating will occur randomly in the patch and include selfing as oer vanilla nemo, from mating proportion
 		}			
 	}		  // end if for mating system 4, hermaphrodites/selfing
@@ -684,7 +685,7 @@ void LCE_Breed::execute()
               
               total += normalBreedKernel[k];
               cumSums[k] = total;
-           
+
            }
            
            unsigned int c = 0;
@@ -692,13 +693,13 @@ void LCE_Breed::execute()
            double randNum = RAND::Uniform();  // maybe check that this isn't the default rand num generator, but is instead one made for nemo 
            
            while(c < lengthBreedKernel) {
-         
+
               if(randNum < cumSums[c]) {
-                 fatherPatchID = _reducedBreedMat[0][i][c] - 1; // to get the universal patch ID
-                                  
+                 fatherPatchID = _reducedBreedMat[0][i][c] - 1; // to get the universal patch ID - i is focal patch, so row in the matrix and c is patch id in that row
+
 				//	cout << i << " " << _reducedBreedMat[0][i][c] << endl;
 
-                 break; // this breaks out of the whole while loop, c won't iterate up
+                 break; // this breaks out of the whole while loop, c won't iterate up, so c will be able to identify the "father" patch
               } 
               c++;
            }
@@ -707,15 +708,15 @@ void LCE_Breed::execute()
                // if this happens, probably when one patch has super high prob vs others, and in that case cn add code to fix because that patch is probably the one to choose from
  
           fatherPatch = _popPtr->getPatch(fatherPatchID);
-        
+
           father = this->getFatherPtr(fatherPatch, mother, indexOfMother);
           
           while(mother == father && !doSelfing){	// if it tries to pick itself as a mate and have not set selfing to happen, do the following
-               
+
                double randNum = RAND::Uniform();  // maybe check that this isn't the default rand num generator, but is instead one made for nemo 
            
 			   while(c < lengthBreedKernel) {
-		 
+
 				  if(randNum < cumSums[c]) {
 					 fatherPatchID = _reducedBreedMat[0][i][c] - 1; // to get the universal patch ID
 								  
@@ -725,16 +726,16 @@ void LCE_Breed::execute()
 				  } 
 				  c++;
 			   }
-		   
+
 			   assert(c < lengthBreedKernel); // if somehow the function above doesn't work, this means it didn't find a box with the probability matching the rand number and c became greater than length of disp kernel      
 				   // if this happens, probably when one patch has super high prob vs others, and in that case cn add code to fix because that patch is probably the one to choose from
  
 			  fatherPatch = _popPtr->getPatch(fatherPatchID);
 		
 			  father = this->getFatherPtr(fatherPatch, mother, indexOfMother);
- 
+
            }
-              
+
 		   delete[] arrayNumMales; 
 		   delete [] numerator;
 		   delete [] normalBreedKernel;  
@@ -752,7 +753,7 @@ void LCE_Breed::execute()
         
           // comment next line out once I get my code working above
         //father = this->getFatherPtr(patch, mother, indexOfMother); // probably will want to change this to a new function using my inputs
-        
+
         NewOffsprg = makeOffspring( do_breed(mother, father, i) );
 
         patch->add(NewOffsprg->getSex(), OFFSx, NewOffsprg); // this is okay, b/c offspring is always added to FOCAL patch, not source patch

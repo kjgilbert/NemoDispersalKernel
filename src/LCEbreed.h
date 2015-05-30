@@ -312,10 +312,13 @@ public:
   Individual* partialSelfing  (Patch* thePatch, Individual* mother, unsigned int motherIndex)
   {
     unsigned int fem;
+
     if(RAND::Uniform() > _mating_proportion) {
       do {
         fem = RAND::Uniform(thePatch->size(FEM, ADLTx));
+        
       } while(fem == motherIndex && thePatch->size(FEM, ADLTx) != 1);
+
       return thePatch->get(FEM, ADLTx, fem);
     }else
       return mother;

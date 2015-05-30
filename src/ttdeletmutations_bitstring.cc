@@ -223,10 +223,12 @@ void TProtoDeletMutations_bitstring::set_effects()
   
   for(unsigned int i = 0; i < _nb_locus; ++i){		// go through each locus and set its effects
     
+    double lowTruncation_mutEffectSize = (get_parameter_value("delet_mutation_rate")/10);
+    
     do{
       _effects[1][i] = (float)(this->*_set_effects_func)(); //homozygote effect: s
-    }while(_effects[1][i] > 1 || _effects[1][i] < (get_parameter_value("delet_mutation_rate")/10)); //truncate distribution		// we can add our truncation here as well, something like while _effects[1][i] > 1 && _effects[1][i] < _mutrate/10
- cout << "check mut rate / 10 " <<  get_parameter_value("delet_mutation_rate")/10 << endl;
+    }while(_effects[1][i] > 1 || _effects[1][i] < lowTruncation_mutEffectSize); //truncate distribution		// we can add our truncation here as well, something like while _effects[1][i] > 1 && _effects[1][i] < _mutrate/10
+
     if(_dominance_model == 1)
       dom = exp(-1.0*_effects[1][i]*k)/2.0; //scaling of h on s
     else dom = _dominance;
