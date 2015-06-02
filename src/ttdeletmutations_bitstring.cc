@@ -601,7 +601,7 @@ void TTDeletMutations_bitstring::inherit (TTrait* mother, TTrait* father)
 }
 
 // ----------------------------------------------------------------------------------------
-// mutate_redraw								NOT SURE WHAT THE DIFFERENCE IS HERE VS PLAIN 'MUTATE' BELOW
+// mutate_redraw			THIS SEEMS TO BE THE NON-BIOLOGICAL MODEL 2 in manual, i.e. it skips a locus if it's already mutated and keeps looking
 // ----------------------------------------------------------------------------------------
 void TTDeletMutations_bitstring::mutate_redraw ()
 {
@@ -616,7 +616,7 @@ void TTDeletMutations_bitstring::mutate_redraw ()
     do { 
       mutLocus = RAND::Uniform( _nb_locus );	// any locus is randomly picked with equal chance
       //check if the locus is not already homozygote:
-    } while( (*sequence[0])[mutLocus] && (*sequence[1])[mutLocus] );		// NOT SURE HOW THIS WORKS? OR THE FOLLOWING?
+    } while( (*sequence[0])[mutLocus] && (*sequence[1])[mutLocus] );
     
     if ( !( (*sequence[0])[mutLocus] || (*sequence[1])[mutLocus] ) )
       sequence[RAND::RandBool()]->set(mutLocus);
@@ -629,7 +629,7 @@ void TTDeletMutations_bitstring::mutate_redraw ()
   }
 }
 // ----------------------------------------------------------------------------------------
-// mutate									FIGURE OUT WHEN THIS IS CALLED VS THE ABOVE
+// mutate				THIS SEEMS TO BE THE RELEVANT MODEL 1 for mutation
 // ----------------------------------------------------------------------------------------
 void TTDeletMutations_bitstring::mutate_noredraw ()
 {
@@ -645,10 +645,9 @@ void TTDeletMutations_bitstring::mutate_noredraw ()
     // has it already mutated in the past?
     if(sequence[mut_chrom]->getBit(mut_locus)) {
     	// true if there is already a mutation there because that would =1
-    	
     	// maybe backmutate (this has a reduced prob)
 		// draw a new rand num and if of some value, proceed with backmutation
-		if(RAND::Uniform() < 0.01){	// 1% of the time do a backmutation once we get here
+		if(RAND::Uniform() < 0.5){	// 50% of the time do a backmutation once we get here
     		//backmutate:
     		sequence[mut_chrom]->flip(mut_locus);	// change to the other number at that locus (0 to 1 or vice versa)
     	}

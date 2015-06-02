@@ -236,7 +236,7 @@ public:
   void flip (size_t n) {_data[n / BITS_PER_WORD] ^= (1UL << (n % BITS_PER_WORD));}
   
   // Returns the bit at n.
-  int getBit (size_t n) { return (_data[n / BITS_PER_WORD] ^ (1UL << (n % BITS_PER_WORD))); }
+  int getBit (size_t n) { return (_data[n / BITS_PER_WORD] & (1UL << (n % BITS_PER_WORD))); }
   
   /**Copy bits from an array of unsigned long words.*/
   void set_data (_ul* srce, size_t nbwrd)
