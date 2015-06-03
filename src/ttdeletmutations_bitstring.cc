@@ -647,7 +647,7 @@ void TTDeletMutations_bitstring::mutate_noredraw ()
     	// true if there is already a mutation there because that would =1
     	// maybe backmutate (this has a reduced prob)
 		// draw a new rand num and if of some value, proceed with backmutation
-		if(RAND::Uniform() < 0.5){	// 50% of the time do a backmutation once we get here
+		if(RAND::Uniform() < 0.01){	// 1% of the time do a backmutation once we get here
     		//backmutate:
     		sequence[mut_chrom]->flip(mut_locus);	// change to the other number at that locus (0 to 1 or vice versa)
     	}
