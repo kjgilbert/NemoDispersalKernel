@@ -1,4 +1,4 @@
-/** $Id: ttquanti.cc,v 1.30 2015-03-27 10:34:45 fred Exp $
+/** $Id: ttquanti.cc,v 1.32 2015-05-01 11:29:19 fred Exp $
  *
  *  @file ttquanti.cc
  *  Nemo2
@@ -621,32 +621,44 @@ inline void TProtoQuanti::inherit_free (sex_t SEX, double* seq, double** parent)
 // ----------------------------------------------------------------------------------------
 inline void TProtoQuanti::inherit_low (sex_t SEX, double* seq, double** parent)
 {
-  register unsigned int prevLoc = 0, chrm_bloc, prev_bloc, cpy_bloc;
+  register unsigned int prevLoc = 0, chrm_bloc = 0, prev_bloc, cpy_bloc;
   register bool flipper;
   
+  //the table containing the loci at which x-overs happen
   vector< unsigned int >& recTable = _map.getRecLoci(SEX, _mapIndex);
+  
+  //the table containing which homologous chromosome copy we start with, for each chromosome
   vector< bool > & firstRecPos = _map.getFirstRecPosition(SEX);
   
+  //number of x-overs
   unsigned int nbRec = recTable.size();
   
   //  cout << "TProtoQuanti::inherit; sex="<<SEX<<"; nb Rec = "<<nbRec;//<<endl;
   
-  //  if (!nbRec) return;
-  
+  // c is the chromosome number
+  // stride is the number of loci considered so-far
+  // rec is the number of x-over done so-far
   for(unsigned int c = 0, stride = 0, rec = 0; c < _numChromosome; ++c) {
     
+    //the copy of the chromosome with which with start
     flipper = firstRecPos[c];
     
+    //number of loci copied so-far
     chrm_bloc = stride + _numLociPerChrmsm[c];
     
+    //last locus at which a x-over happened, will be first position on current chromosome
     prevLoc = stride;
     
     //    cout<<"chrm "<<c<<" side="<<firstRecPos[c]<<endl;
     
+    // copy blocs of loci between x-over points on current chromosome
+    // skip it if locus is not on this chromosome but a latter one
     for(; recTable[rec] < chrm_bloc && rec < nbRec; rec++) {
       
+      // start position of the bloc of values to copy (_nb_traits values per locus)
       prev_bloc = prevLoc * _nb_traits;
       
+      // size of the bloc to copy
       cpy_bloc = (recTable[rec] - prevLoc) * _nb_traits;
       
       //      cout<<"copy seq from "<<prevLoc<<"("<<prev_bloc<<") to "<<recTable[rec]
@@ -654,24 +666,20 @@ inline void TProtoQuanti::inherit_low (sex_t SEX, double* seq, double** parent)
       
       memcpy(&seq[prev_bloc], &parent[flipper][prev_bloc], cpy_bloc * _sizeofLocusType);
       
+      //update the starting locus to the next recombination point
       prevLoc = recTable[rec];
       
-      //      prev_loc = i;
-      //      
-      //      while(!_recomb_positions[++i] && i < chrm_bloc) ; //!!_recomb_pos should have nb_locus+1 elmnts for the last pass because of the ++i!!
-      //      
-      //      seq_bloc = (i - prev_loc) * _nb_traits;
-      //      
-      //      //all this means if rec_pos is true for loc pos 1, recombination occurs between loc 0 and 1...
-      
-      //      memcpy(&seq[prev_bloc], &parent[flipper][prev_bloc], seq_bloc * sizeof(double));
-      
+      //switch side for next bloc to copy on this chromosome
       flipper = !flipper;
     }
+    
     prev_bloc = prevLoc * _nb_traits;
+    
     cpy_bloc = (chrm_bloc - prevLoc) * _nb_traits;
+    
     //    cout << "copy end of chrmsm from "<<prevLoc<<" to "<<chrm_bloc
     //         <<"("<<(chrm_bloc - prevLoc)<<" loc) on side "<<flipper<<endl;
+    
     //copy what's left between the last x-over point and the end of the chrmsme
     memcpy(&seq[prev_bloc], &parent[flipper][prev_bloc], cpy_bloc * _sizeofLocusType);
     
@@ -877,8 +885,13 @@ inline void TTQuanti::init_sequence ()
   
   //decide what initial value to use
   
-  //Note: this is kept here as the initial values may have been set individually by LCE_quanti
-  //      it wouldn't make sense then to store the init values in the prototype only
+  //Note: the initial values may have been set individually by LCE_quanti
+  //      it wouldn't make sense then to store the init values in the prototype 
+  //      because init values are set patch-specific by LCE_quanti
+  //      Problem: without LCE_quanti, the original init values must not change from one replicate
+  //      to the other, so we use a local variable
+  
+  double my_init[_nb_traits];
 
   if(_doInitMutation == 3) {
     
@@ -887,12 +900,12 @@ inline void TTQuanti::init_sequence ()
     for(unsigned int j = 0; j < _nb_traits; j++) {
       //      sdVm = sqrt(4*_nb_locus*_mut_rate*_myProto->get_trait_var(j)); //trait variance = 2Vm
       sdVm = 0.25;
-      _init_value[j] = (_init_value[j] + RAND::Gaussian(sdVm)) / (2*_nb_locus);
+      my_init[j] = (_init_value[j] + RAND::Gaussian(sdVm)) / (2*_nb_locus);
     }
     
   } else {
     
-    for(unsigned int j = 0; j < _nb_traits; j++) _init_value[j] /= (2*_nb_locus);
+    for(unsigned int j = 0; j < _nb_traits; j++) my_init[j] = _init_value[j] / (2*_nb_locus);
     
   }
   
@@ -900,8 +913,8 @@ inline void TTQuanti::init_sequence ()
   for(unsigned int i = 0; i < _nb_locus; i++) {
     pos = i * _nb_traits;
     for(unsigned int j = 0; j < _nb_traits; j++) {
-      _sequence[0][pos] = _init_value[j];
-      _sequence[1][pos] = _init_value[j];
+      _sequence[0][pos] = my_init[j];
+      _sequence[1][pos] = my_init[j];
       pos++;
     }
   }
@@ -1172,7 +1185,6 @@ void TTQuantiSH::init()
   _Va = new double [_nb_trait];
   _Vb = new double [_nb_trait];
   _Vp = new double [_nb_trait];
-  _covar = new double [_nb_trait*(_nb_trait -1)/2];
   _eigval = new double [_nb_trait];
   
   _eigvect = new double* [_nb_trait];
@@ -1195,12 +1207,19 @@ void TTQuantiSH::init()
   }
   
   _peigvect = new double* [_patchNbr];
-  _pcovar = new double* [_patchNbr];
+  for(unsigned int i = 0; i < _patchNbr; i++)     
+    _peigvect[i] = new double [_nb_trait*_nb_trait]; 
   
-  for(unsigned int i = 0; i < _patchNbr; i++) {
+  
+  if(_nb_trait > 1) {
     
-    _pcovar[i] = new double [_nb_trait*(_nb_trait - 1)/2];
-    _peigvect[i] = new double [_nb_trait*_nb_trait];
+    _covar = new double [_nb_trait*(_nb_trait -1)/2];
+    
+    _pcovar = new double* [_patchNbr];
+
+    for(unsigned int i = 0; i < _patchNbr; i++) 
+      _pcovar[i] = new double [_nb_trait*(_nb_trait - 1)/2];
+    
   }
   
 }
@@ -1798,10 +1817,19 @@ void TTQuantiSH::setStats (age_t AGE)
     return;
   
   unsigned int pop_size = _pop->size(AGE);
-  unsigned int nb_patch = _pop->getPatchNbr();
   unsigned int patch_size;
   double *phenot1, *genot1, *genot2;
   
+  unsigned int nb_patch = _pop->getPatchNbr();
+  
+  if(nb_patch < _patchNbr) {
+    warning("increase in patch number detected (in Quanti Stat Handler),");
+    warning("stats for quanti trait will not be recorded in new patches, patch identity may have changed.\n");
+    _patchNbr = nb_patch; // record stat only in remaining patches
+  }
+    
+  if(nb_patch > _patchNbr)  nb_patch = _patchNbr;  //tables have been allocated for _patchNbr patches
+    
   setDataTables(AGE);
   
 #ifdef HAS_GSL
