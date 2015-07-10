@@ -1,4 +1,4 @@
-/**  $Id: LCEselection.cc,v 1.18 2015-01-26 09:18:50 fred Exp $
+/**  $Id: LCEselection.cc,v 1.21 2015-04-01 14:25:16 fred Exp $
 *
 *  @file LCEselection.cc
 *  Nemo2
@@ -107,8 +107,23 @@ void LCE_Selection_base::loadStatServices ( StatServices* loader )
 // ----------------------------------------------------------------------------------------
 bool LCE_Selection_base::setParameters ( )
 {   
-  if(!attach_trait(get_parameter("selection_trait")->getArg())) return false;
-     
+  //selection may on more than on trait at a time
+  vector< string >  traits = get_parameter("selection_trait")->getMultiArgs();
+  
+  _TraitIndices.clear();
+
+  for(unsigned int i = 0; i < traits.size(); i++)  {
+
+    if(_popPtr->getTraitIndex(traits[i].c_str()) == -1) {
+      return error("cannot attach trait \"%s\" to life cycle event \"%s\", trait has not been initiated.\n",
+            traits[i].c_str(), _event_name.c_str());
+    } 
+    else {    
+      _TraitIndices.push_back(_popPtr->getTraitIndex(traits[i].c_str()));
+    }
+    
+  }
+  
   if(!set_fit_model()) return false;
   
   if(!set_sel_model()) return false;
@@ -118,9 +133,9 @@ bool LCE_Selection_base::setParameters ( )
   if(!set_param_rate_of_change()) return false;
   
   _mean_fitness = _max_fitness = 0;
-  _nb_trait = _popPtr->getIndividualProtoype()->getTraitNumber();
   _scaling_factor = 1;
   resetCounters();
+
   return true; 
 }
 // ----------------------------------------------------------------------------------------
@@ -184,19 +199,33 @@ bool LCE_Selection_base::set_sel_model()
   else
     _eVariance = 0;
   
+  _SelectionModels.clear();
   
-  string sel_model = _paramSet->getArg("selection_model");
-  
-  
-  if(!_paramSet->isSet("selection_model")) {  //means that 'sel_model' is empty
+  if(!_paramSet->isSet("selection_model")) {
     
-    _getRawFitness = &LCE_Selection_base::getFitnessDirect;
+    _getRawFitness.push_back(&LCE_Selection_base::getFitnessDirect);
     
-    sel_model = "direct";
+    _SelectionModels.push_back("direct");
       
   } else {
     
-    
+    _SelectionModels = get_parameter("selection_model")->getMultiArgs();
+  } //end_if isSet()
+
+  if (_SelectionModels.size() != _TraitIndices.size()) {
+    error("\"selection_trait\" and \"selection_model\" must have the same number of arguments.");
+    return false;
+  }
+
+  
+  string sel_model;
+  
+  _getRawFitness.clear();
+  
+  for(unsigned int t = 0; t < _SelectionModels.size(); t++) {
+
+    sel_model = _SelectionModels[t];
+  
     if(sel_model == "fix") {
       
       if(!get_parameter("selection_lethal_equivalents")->isSet()) {
@@ -211,27 +240,31 @@ bool LCE_Selection_base::set_sel_model()
       }
       
       if(!get_parameter("selection_pedigree_F")->isSet()) {
-        error("\"selection_pedigree_F\" parameter is missing with \"fix\" selection!\n");
-        return false;
+      
+        return error("\"selection_pedigree_F\" parameter is missing with \"fix\" selection!\n");
+     
       } else {
+        
         TMatrix tmp_mat;
+        
         get_parameter("selection_pedigree_F")->getMatrix(&tmp_mat);
+        
         if(tmp_mat.getNbCols() != 5) {
-          error("\"selection_pedigree_F\" must be an array of size 5.\n");
-          return false;
+          return error("\"selection_pedigree_F\" must be an array of size 5.\n");
         }
+
         for(unsigned int i = 0; i < 5; i++)
           _Fpedigree[i] = tmp_mat.get(0,i);
       }
       
       for(unsigned int i = 0; i < 5; i++)
         _FitnessFixModel[i] = _base_fitness * exp( -_letheq * _Fpedigree[i] );
-      
-      _getRawFitness = &LCE_Selection_base::getFitnessFixedEffect;
+            
+      _getRawFitness.push_back(&LCE_Selection_base::getFitnessFixedEffect);
       
     } else if(sel_model == "direct") {
-      //check trait dimensionality!!
-      _getRawFitness = &LCE_Selection_base::getFitnessDirect;
+      
+       _getRawFitness.push_back(&LCE_Selection_base::getFitnessDirect);
       
     } else if(sel_model == "quadratic") {
       
@@ -239,26 +272,21 @@ bool LCE_Selection_base::set_sel_model()
       
         if(!setSelectionMatrix()) return false; //this to set the selection variance params
         //now reset the fitness function:
-        _getRawFitness = &LCE_Selection_base::getFitnessUnivariateQuadratic;
+         _getRawFitness.push_back(&LCE_Selection_base::getFitnessUnivariateQuadratic);
       
-      } else {
-        error("\"quadratic\" fitness model implemented for a single trait only.\n");
-        return false;
-      }
+      } else return error("\"quadratic\" fitness model implemented for a single trait only.\n");
+    
+
     } else if(sel_model == "gaussian") {
       
       if(!setSelectionMatrix()) return false;
       
-    } else {
-      error("wrong selection model, must be either \"fix\", \"direct\", or \"gaussian\".\n");
-      return false;
-    }
-  } //end_if isSet()
-  
-  if(sel_model != "fix" && !_paramSet->isSet("selection_trait")) {
-    error("trait under selection is not set, please add parameter \"selection_trait\"\n");
-    return false;
+    } else return error("wrong selection model, must be either \"fix\", \"direct\", or \"gaussian\".\n");
+    
   }
+  
+  if(sel_model != "fix" && !_paramSet->isSet("selection_trait"))
+    return error("trait under selection is not set, please add parameter \"selection_trait\"\n");
 
   return true;
 }
@@ -270,19 +298,19 @@ bool LCE_Selection_base::setSelectionMatrix()
   TMatrix tmp_mat; 
   unsigned int patchNbr = _popPtr->getPatchNbr();
   
-  if(!get_parameter("selection_matrix")->isSet() && !get_parameter("selection_variance")->isSet()) {
-    error("\"selection_matrix\" or \"selection_variance\" must be set with selection model = \"gaussian\".\n");
-    return false;
-  }
+  if(!get_parameter("selection_matrix")->isSet() && !get_parameter("selection_variance")->isSet()) 
+    return error("\"selection_matrix\" or \"selection_variance\" must be set with selection model = \"gaussian\".\n");
+
   
-  if(get_parameter("selection_variance")->isSet() && !get_parameter("selection_trait_dimension")->isSet()) {
-    error("parameter \"selection_trait_dimension\" is missing!\n");
-    return false;
-  }
+  if(get_parameter("selection_variance")->isSet() && !get_parameter("selection_trait_dimension")->isSet())
+    return error("parameter \"selection_trait_dimension\" is missing!\n");
+   
   
+  //clear the selection matrix container
   vector< TMatrix* >::iterator selIT = _selection_matrix.begin();
-  for(; selIT != _selection_matrix.end(); ++selIT)
-    if((*selIT)) delete (*selIT);  
+  
+  for(; selIT != _selection_matrix.end(); ++selIT) if((*selIT)) delete (*selIT);  
+  
   _selection_matrix.clear();
   
   
@@ -291,14 +319,12 @@ bool LCE_Selection_base::setSelectionMatrix()
     //selection matrix provided, same selection surface in each patch
     _paramSet->getMatrix("selection_matrix", &tmp_mat);
     
-    if(tmp_mat.getNbCols() != tmp_mat.getNbRows()) {
-      error("\"selection_matrix\" must be a square matrix!\n");
-      return false;
-    }
-    
+    if(tmp_mat.getNbCols() != tmp_mat.getNbRows())
+      return error("\"selection_matrix\" must be a square matrix!\n");
+
     _selectTraitDimension = tmp_mat.getNbCols();
     
-    //we have one selection matrix per patch
+    //we have one selection matrix per patch, copy it in the container for each patch
     for(unsigned int i = 0; i < patchNbr; ++i)
       _selection_matrix.push_back( new TMatrix(tmp_mat) );
     
@@ -368,6 +394,7 @@ bool LCE_Selection_base::setSelectionMatrix()
     if(_gsl_selection_matrix.size() != 0)
       for(unsigned int i = 0; i < _gsl_selection_matrix.size(); ++i)
         if(_gsl_selection_matrix[i] != NULL) gsl_matrix_free( _gsl_selection_matrix[i] );
+    
     _gsl_selection_matrix.clear();
     
     for( unsigned int p = 0; p < patchNbr; p++) {
@@ -385,9 +412,9 @@ bool LCE_Selection_base::setSelectionMatrix()
     _res1 = gsl_vector_alloc( _selectTraitDimension );
     
     if(_eVariance > 0)
-      _getRawFitness = &LCE_Selection_base::getFitnessMultivariateGaussian_VE;
+       _getRawFitness.push_back(&LCE_Selection_base::getFitnessMultivariateGaussian_VE);
     else
-      _getRawFitness = &LCE_Selection_base::getFitnessMultivariateGaussian;
+       _getRawFitness.push_back(&LCE_Selection_base::getFitnessMultivariateGaussian);
     
   } else {
     //selection on one trait only
@@ -396,9 +423,9 @@ bool LCE_Selection_base::setSelectionMatrix()
       _selection_variance.push_back( _selection_matrix[p]->get(0, 0) );
     
     if(_eVariance > 0)
-      _getRawFitness = &LCE_Selection_base::getFitnessUnivariateGaussian_VE;
+       _getRawFitness.push_back(&LCE_Selection_base::getFitnessUnivariateGaussian_VE);
     else
-      _getRawFitness = &LCE_Selection_base::getFitnessUnivariateGaussian;
+       _getRawFitness.push_back(&LCE_Selection_base::getFitnessUnivariateGaussian);
   }
   
   
@@ -414,9 +441,7 @@ bool LCE_Selection_base::set_local_optima ()
   if( (model == "gaussian" || model == "quadratic")
      && !get_parameter("selection_local_optima")->isSet()) {
     
-    error("parameter \"selection_local_optima\" must be set to have Gaussian or quadratic selection.\n");
-    
-    return false;
+    return error("parameter \"selection_local_optima\" must be set to have Gaussian or quadratic selection.\n");
     
   } else {
     
@@ -451,8 +476,7 @@ bool LCE_Selection_base::set_param_rate_of_change ()
   
   if (get_parameter("selection_rate_environmental_change")->isSet() 
       && get_parameter("selection_std_rate_environmental_change")->isSet() ) {
-    error("both \"selection_rate_environmental_change\" and \"selection_std_rate_environmental_change\" are set, need only one.\n");
-    return false;
+    return error("both \"selection_rate_environmental_change\" and \"selection_std_rate_environmental_change\" are set, need only one.\n");
   }
   
   TMatrix tmpMat;
@@ -499,15 +523,11 @@ bool LCE_Selection_base::set_param_rate_of_change ()
     _setNewLocalOptima = &LCE_Selection_base::set_std_rate_of_change;
   }
 
-  if(tmpMat.nrows() != 1) {
-    error("The matrix of rate of change in local optima must be an array (nrows=1)\n");
-    return false;
-  }
+  if(tmpMat.nrows() != 1)
+    return error("The matrix of rate of change in local optima must be an array (nrows=1)\n");
   
-  if((int)tmpMat.ncols() > _selectTraitDimension) {
-    error("The matrix of rate of change in local optima must have at most as many columns as dimensions of the trait(s) under selection\n");
-    return false;
-  }
+  if((int)tmpMat.ncols() > _selectTraitDimension)
+    return error("The matrix of rate of change in local optima must have at most as many columns as dimensions of the trait(s) under selection\n");
   
   _do_change_local_opt = true;
 
@@ -525,11 +545,11 @@ bool LCE_Selection_base::set_param_rate_of_change ()
 // ----------------------------------------------------------------------------------------
 // LCE_Selection_base::getFitnessUnivariateQuadratic
 // ----------------------------------------------------------------------------------------
-double LCE_Selection_base::getFitnessUnivariateQuadratic ( Individual* ind, unsigned int patch )
+double LCE_Selection_base::getFitnessUnivariateQuadratic ( Individual* ind, unsigned int patch, unsigned int trait )
 {
   register double res2, diff;
   
-  _phe = (double*)ind->getTraitValue(_LCELinkedTraitIndex);
+  _phe = (double*)ind->getTraitValue(trait);
   
   diff = _phe[0] - _local_optima->get(patch, 0);
   
@@ -540,11 +560,11 @@ double LCE_Selection_base::getFitnessUnivariateQuadratic ( Individual* ind, unsi
 // ----------------------------------------------------------------------------------------
 // LCE_Selection_base::getFitnessUnivariateGaussian
 // ----------------------------------------------------------------------------------------
-double LCE_Selection_base::getFitnessUnivariateGaussian ( Individual* ind, unsigned int patch )
+double LCE_Selection_base::getFitnessUnivariateGaussian ( Individual* ind, unsigned int patch, unsigned int trait )
 {
   register double res2, diff;
   
-  _phe = (double*)ind->getTraitValue(_LCELinkedTraitIndex);
+  _phe = (double*)ind->getTraitValue(trait);
   
   diff = _phe[0] - _local_optima->get(patch, 0);
   
@@ -555,13 +575,13 @@ double LCE_Selection_base::getFitnessUnivariateGaussian ( Individual* ind, unsig
 // ----------------------------------------------------------------------------------------
 // LCE_Selection_base::getFitnessMultivariateGaussian
 // ----------------------------------------------------------------------------------------
-double LCE_Selection_base::getFitnessMultivariateGaussian ( Individual* ind, unsigned int patch )
+double LCE_Selection_base::getFitnessMultivariateGaussian ( Individual* ind, unsigned int patch, unsigned int trait )
 {
   register double res2;
   
-  if(!ind) fatal("passing NULL ind ptr to LCE_Selection_base::getFitnessMultivariateGaussian!!!\n");
+//  if(!ind) fatal("passing NULL ind ptr to LCE_Selection_base::getFitnessMultivariateGaussian!!!\n");
   
-  _phe = (double*)ind->getTraitValue(_LCELinkedTraitIndex);
+  _phe = (double*)ind->getTraitValue(trait);
   
   for( int i = 0; i < _selectTraitDimension; i++)
     gsl_vector_set(_diffs, i, _phe[i] - _local_optima->get(patch, i));
@@ -577,11 +597,11 @@ double LCE_Selection_base::getFitnessMultivariateGaussian ( Individual* ind, uns
 // ----------------------------------------------------------------------------------------
 // LCE_Selection_base::getFitnessUnivariateGaussian_VE
 // ----------------------------------------------------------------------------------------
-double LCE_Selection_base::getFitnessUnivariateGaussian_VE ( Individual* ind, unsigned int patch )
+double LCE_Selection_base::getFitnessUnivariateGaussian_VE ( Individual* ind, unsigned int patch, unsigned int trait )
 {
   register double res2, diff;
   
-  _phe = (double*)ind->getTraitValue(_LCELinkedTraitIndex);
+  _phe = (double*)ind->getTraitValue(trait);
   
   //add the environmental variance here:
   diff = _phe[0] + RAND::Gaussian(_eVariance) - _local_optima->get(patch, 0);
@@ -593,11 +613,11 @@ double LCE_Selection_base::getFitnessUnivariateGaussian_VE ( Individual* ind, un
 // ----------------------------------------------------------------------------------------
 // LCE_Selection_base::getFitnessMultivariateGaussian_VE
 // ----------------------------------------------------------------------------------------
-double LCE_Selection_base::getFitnessMultivariateGaussian_VE ( Individual* ind, unsigned int patch )
+double LCE_Selection_base::getFitnessMultivariateGaussian_VE ( Individual* ind, unsigned int patch, unsigned int trait )
 {
   register double res2;
   
-  _phe = (double*)ind->getTraitValue(_LCELinkedTraitIndex);
+  _phe = (double*)ind->getTraitValue(trait);
   
   //add the environmental variance here:
   for( int i = 0; i < _selectTraitDimension; i++)
@@ -611,7 +631,24 @@ double LCE_Selection_base::getFitnessMultivariateGaussian_VE ( Individual* ind, 
   
   return exp( -0.5 * res2 );
 }
-
+// ----------------------------------------------------------------------------------------
+// LCE_Selection_base::getMeanFitness
+// ----------------------------------------------------------------------------------------
+double LCE_Selection_base::getFitnessAbsolute (Individual* ind, unsigned int patch)
+{
+  double fitness = 1;
+  //at this point, _getRawFitness.size() == _TraitIndices.size()
+  //and we assume that the functions are "aligned" with the traits
+  if((SIMenv::getCurrentGeneration() >= 5000 && SIMenv::getCurrentGeneration() <= 7500) && SIMenv::getCurrentGeneration() % 25 == 0) cout << SIMenv::getCurrentGeneration() << " " << patch << " ";
+  
+  for(unsigned int i = 0; i < _getRawFitness.size(); i++)
+  {
+    fitness *= (this->*_getRawFitness[i])(ind, patch, _TraitIndices[i]);
+    if((SIMenv::getCurrentGeneration() >= 5000 && SIMenv::getCurrentGeneration() <= 7500) && SIMenv::getCurrentGeneration() % 25 == 0) cout << (this->*_getRawFitness[i])(ind, patch, _TraitIndices[i]) << " ";
+  }
+  if((SIMenv::getCurrentGeneration() >= 5000 && SIMenv::getCurrentGeneration() <= 7500) && SIMenv::getCurrentGeneration() % 25 == 0) cout << fitness << endl;
+  return fitness;
+}
 // ----------------------------------------------------------------------------------------
 // LCE_Selection_base::getMeanFitness
 // ----------------------------------------------------------------------------------------
@@ -716,7 +753,7 @@ void LCE_Selection_base::doViabilitySelection (sex_t SEX, age_idx AGE, Patch* pa
     _ind_cntr[cat]++;
     
     if(RAND::Uniform() > fitness ) {
-      
+      //this individual dies
       patch->remove(SEX, AGE, i);
       
       _popPtr->recycle(ind);
@@ -895,31 +932,31 @@ bool LCE_SelectionSH::setStatRecorders (string& token)
   else
     sub_token = token;
   
-  if(sub_token.compare("fitness") == 0) {
+  if(sub_token == "fitness") {
     add("Mean population fitness","fitness.mean",ALL,0,0,&LCE_SelectionSH::getMeanFitness,0,0,0);
     add("Mean population fitness","fitness.outb",ALL,0,0,0,&LCE_SelectionSH::getFitness,0,0);
     add("Mean population fitness","fitness.outw",ALL,1,0,0,&LCE_SelectionSH::getFitness,0,0);
     add("Mean population fitness","fitness.hsib",ALL,2,0,0,&LCE_SelectionSH::getFitness,0,0);
     add("Mean population fitness","fitness.fsib",ALL,3,0,0,&LCE_SelectionSH::getFitness,0,0);
     add("Mean population fitness","fitness.self",ALL,4,0,0,&LCE_SelectionSH::getFitness,0,0);
-  } else if(sub_token.compare("survival") == 0) {
+  } else if(sub_token == "survival") {
     add("Mean offspring survival","survival.outb",ALL,0,0,0,&LCE_SelectionSH::getSurvival,0,0);
     add("Mean offspring survival","survival.outw",ALL,1,0,0,&LCE_SelectionSH::getSurvival,0,0);
     add("Mean offspring survival","survival.hsib",ALL,2,0,0,&LCE_SelectionSH::getSurvival,0,0);
     add("Mean offspring survival","survival.fsib",ALL,3,0,0,&LCE_SelectionSH::getSurvival,0,0);
     add("Mean offspring survival","survival.self",ALL,4,0,0,&LCE_SelectionSH::getSurvival,0,0);
-  } else if(sub_token.compare("fitness.prop") == 0) {
+  } else if(sub_token == "fitness.prop") {
     add("Proportion of b/n demes outbreds","prop.outb",ALL,0,0,0,&LCE_SelectionSH::getPedProp,0,0);
     add("Proportion of w/n demes outbreds","prop.outw",ALL,1,0,0,&LCE_SelectionSH::getPedProp,0,0);
     add("Proportion of half-sib crossings","prop.hsib",ALL,2,0,0,&LCE_SelectionSH::getPedProp,0,0);
     add("Proportion of full-sib crossings","prop.fsib",ALL,3,0,0,&LCE_SelectionSH::getPedProp,0,0);
     add("Proportion of selfed progeny","prop.self",ALL,4,0,0,&LCE_SelectionSH::getPedProp,0,0);
     
-  } else if(sub_token.compare("fitness.patch") == 0) {
+  } else if(sub_token == "fitness.patch") {
     
     addMeanPerPatch(AGE);  
     
-  } else if(sub_token.compare("fitness.var.patch") == 0) {
+  } else if(sub_token == "fitness.var.patch") {
     
     addVarPerPatch(AGE);
     
