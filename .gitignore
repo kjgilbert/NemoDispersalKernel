@@ -30,6 +30,7 @@ EDITED*
 !src/tmatrix.h
 !src/bitstring.h
 !ttquanti.cc
+!src/LCEselection.cc
 
 !Readme.md
 !.gitignore
