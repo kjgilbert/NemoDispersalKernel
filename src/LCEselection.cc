@@ -639,14 +639,14 @@ double LCE_Selection_base::getFitnessAbsolute (Individual* ind, unsigned int pat
   double fitness = 1;
   //at this point, _getRawFitness.size() == _TraitIndices.size()
   //and we assume that the functions are "aligned" with the traits
-  if((SIMenv::getCurrentGeneration() >= 5000 && SIMenv::getCurrentGeneration() <= 7500) && SIMenv::getCurrentGeneration() % 25 == 0) cout << SIMenv::getCurrentGeneration() << " " << patch << " ";
+  if((SIMenv::getCurrentGeneration() >= 14900 && SIMenv::getCurrentGeneration() <= 16100) && SIMenv::getCurrentGeneration() % 10 == 0) cout << SIMenv::getCurrentGeneration() << " " << patch << " ";
   
   for(unsigned int i = 0; i < _getRawFitness.size(); i++)
   {
     fitness *= (this->*_getRawFitness[i])(ind, patch, _TraitIndices[i]);
-    if((SIMenv::getCurrentGeneration() >= 5000 && SIMenv::getCurrentGeneration() <= 7500) && SIMenv::getCurrentGeneration() % 25 == 0) cout << (this->*_getRawFitness[i])(ind, patch, _TraitIndices[i]) << " ";
+    if((SIMenv::getCurrentGeneration() >= 14900 && SIMenv::getCurrentGeneration() <= 16100) && SIMenv::getCurrentGeneration() % 10 == 0) cout << (this->*_getRawFitness[i])(ind, patch, _TraitIndices[i]) << " ";
   }
-  if((SIMenv::getCurrentGeneration() >= 5000 && SIMenv::getCurrentGeneration() <= 7500) && SIMenv::getCurrentGeneration() % 25 == 0) cout << fitness << endl;
+// DONT NEED FULL FITNESS B/C CAN JUST MULTIPLY TO GET IT  if((SIMenv::getCurrentGeneration() >= 15000 && SIMenv::getCurrentGeneration() <= 16000) && SIMenv::getCurrentGeneration() % 10 == 0) cout << fitness << endl;
   return fitness;
 }
 // ----------------------------------------------------------------------------------------
