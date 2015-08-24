@@ -126,7 +126,7 @@ void LCE_Selection_base::loadFileServices ( FileServices* loader )
       
       _writer->set_multi(true, true, 1, &temp, get_parameter("selection_output_dir")->getArg());
     //           rpl_per, gen_per, rpl_occ, gen_occ, rank, path, self-ref
-    } else _writer->set(true, param->isSet(), 1, (param->isSet() ? (int)param->getValue() : 0), 0, get_parameter("selection_output_dir")->getArg(), this);
+    } else _writer->set(true, true, 1, (param->isSet() ? (int)param->getValue() : 0), 0, get_parameter("selection_output_dir")->getArg(), this);
     
   
     loader->attach(_writer);
