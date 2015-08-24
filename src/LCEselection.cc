@@ -133,10 +133,8 @@ void LCE_Selection_base::loadFileServices ( FileServices* loader )
   
   } else {
     
-    if(_writer != NULL) {
-       delete _writer;
-       _writer = NULL;
-    }
+    if(_writer) delete _writer;
+  
     return;
   }
     
