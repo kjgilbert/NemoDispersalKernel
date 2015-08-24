@@ -1208,7 +1208,7 @@ void LCE_SelectionFH::FHwrite()
     FILE<<" trait"<< tstring::int2str(i+1);
   }
   
-  FILE<< " age isMigrant"<<endl;
+  FILE<< " age isMigrant\n";
   
   
   Patch* patch;
