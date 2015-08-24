@@ -126,7 +126,7 @@ void LCE_Selection_base::loadFileServices ( FileServices* loader )
       
       _writer->set_multi(true, true, 1, &temp, get_parameter("selection_output_dir")->getArg());
     //           rpl_per, gen_per, rpl_occ, gen_occ, rank, path, self-ref
-    } else _writer->set(true, true, 1, (param->isSet() ? (int)param->getValue() : 0), 0, get_parameter("selection_output_dir")->getArg(), this);
+    } else _writer->set(true, param->isSet(), 1, (param->isSet() ? (int)param->getValue() : 0), 0, get_parameter("selection_output_dir")->getArg(), this);
     
   
     loader->attach(_writer);
@@ -1206,17 +1206,22 @@ void LCE_SelectionFH::FHwrite()
     FILE<<" trait"<< tstring::int2str(i+1);
   }
   
-  FILE<< " age isMigrant\n";
-  
+  FILE<< " age isMigrant" << endl;
   
   Patch* patch;
-  
+
   for(unsigned int i = 0; i < _pop->getPatchNbr(); ++i ) {
     
     patch = _pop->getPatch(i);
-    
-    
+
+cout << num_traits << endl;
+cout << patch << endl;
+cout << i << endl;
+cout << "OFF" << OFFSx << endl;
+cout << "FEM" << FEM << endl;
+cout << "MAL" << MAL << endl;
     print(FILE, FEM, OFFSx, i, patch, num_traits);
+cout << "test" << endl;
     print(FILE, MAL, OFFSx, i, patch, num_traits);
     
     print(FILE, FEM, ADLTx, i, patch, num_traits);
@@ -1229,18 +1234,19 @@ void LCE_SelectionFH::FHwrite()
 void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p, Patch* patch, unsigned int ntraits)
 {
   Individual* ind;
-  
+cout << "test1" << endl;  
+
   for (unsigned int i = 0; i < patch->size(SEX, AGE); ++i) {
     ind = patch->get(SEX, AGE, i);
-    
-    FH<<p+1;
-    
+cout << "test2" << endl;    
+    FH<<p+1; // prints the patch ID number, add 1 because C++ iterates from 0
+cout << "test3" << endl;    
     for(unsigned int j = 0; j < ntraits; ++j) 
-      FH<<" "<<(_FHLinkedEvent->*_FHLinkedEvent->_getRawFitness[j])(ind, p, _FHLinkedEvent->_TraitIndices[j]);
+      FH<<" "<<(_FHLinkedEvent->*_FHLinkedEvent->_getRawFitness[j])(ind, p, _FHLinkedEvent->_TraitIndices[j]); // print the fitness value for the trait currently iterated
   }
-  
-  FH<<" "<<ind->getAge()<< " "<< (p == ind->getHome() ? 0 : 1) <<endl;
-  
+cout << "test4" << endl;  
+  FH<<" "<<ind->getAge()<< " "<< (p == ind->getHome() ? 0 : 1) <<endl; // print individual's age and migrant status
+cout << "test5" << endl;  
   
 }
 
