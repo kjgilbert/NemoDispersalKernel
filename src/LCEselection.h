@@ -32,12 +32,14 @@
 
 #include <cmath>
 #include "lifecycleevent.h"
+#include "filehandler.h"
 #ifdef HAS_GSL
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
 #endif
 
 class LCE_SelectionSH;
+class LCE_SelectionFH;
 //CLASS LCE_Selection_base
 //
 /**Base class performing (viability) selection on an arbitrary trait.
@@ -75,8 +77,10 @@ class LCE_Selection_base : public virtual LifeCycleEvent
   
   ///@}
   
+  
   /**The StatHandler associated class is a friend.*/
   friend class LCE_SelectionSH;
+  friend class LCE_SelectionFH;
   friend class LCE_Breed_Selection;
   
 protected:
@@ -108,14 +112,26 @@ protected:
   
   ///@name Pointers to functions, set in LCE_Selection_base::setParameters
   ///@{
+  /**A vector containing pointers to fitness function related to each trait under selection.*/
   vector< double (LCE_Selection_base::* ) (Individual*, unsigned int, unsigned int) > _getRawFitness;
+
+  /**Pointer to the function returning the individual fitness. 
+   May point to LCE_Selection_base::getFitnessAbsolute or LCE_Selection_base::getFitnessRelative.*/
   double (LCE_Selection_base::* _getFitness) (Individual*, unsigned int);
+
+  /**Pointer to the function used to set the fitness scaling factor when fitness is relative.
+   May point to LCE_Selection_base::setScalingFactorGlobal, LCE_Selection_base::setScalingFactorLocal,
+   or LCE_Selection_base::setScalingFactorAbsolute (returns 1).*/
   void (LCE_Selection_base::* _setScalingFactor) (age_idx, unsigned int);
+
+  /**Pointer to the function used to change the local phenotypic optima or its rate of change.
+   May point to LCE_Selection_base::changeLocalOptima or LCE_Selection_base::set_std_rate_of_change.*/
   void (LCE_Selection_base::* _setNewLocalOptima) (void);
   ///@}
   
   LCE_SelectionSH* _stater;
-    
+  LCE_SelectionFH* _writer;
+   
 public:
     
   LCE_Selection_base ( );
@@ -299,6 +315,23 @@ public:
   double getMeanPatchFitness (unsigned int i);
   double getVarPatchFitness (unsigned int i, unsigned int int_agex);
 };
+
+class LCE_SelectionFH : public virtual EventFileHandler< LCE_Selection_base >
+{
+  
+  public:
+  
+  LCE_SelectionFH(LCE_Selection_base *event) : EventFileHandler< LCE_Selection_base >(event, ".fit") { }
+  
+  virtual ~LCE_SelectionFH() {}
+  
+  virtual void FHwrite();
+  
+  virtual void FHread(string& filename) {}
+  
+  void print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int i, Patch* patch, unsigned int ntraits);
+};
+
 
 #endif
 
