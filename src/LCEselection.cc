@@ -1214,18 +1214,11 @@ void LCE_SelectionFH::FHwrite()
     
     patch = _pop->getPatch(i);
 
-cout << num_traits << endl;
-cout << patch << endl;
-cout << i << endl;
-cout << "OFF" << OFFSx << endl;
-cout << "FEM" << FEM << endl;
-cout << "MAL" << MAL << endl;
-    print(FILE, FEM, OFFSx, i, patch, num_traits);
-cout << "test" << endl;
-    print(FILE, MAL, OFFSx, i, patch, num_traits);
+    if( (FEM != 0) & (OFFSx != 0) ) print(FILE, FEM, OFFSx, i, patch, num_traits);
+    if( (MAL != 0) & (OFFSx != 0) ) print(FILE, MAL, OFFSx, i, patch, num_traits);
     
-    print(FILE, FEM, ADLTx, i, patch, num_traits);
-    print(FILE, MAL, ADLTx, i, patch, num_traits);
+    if( (FEM != 0) & (ADLTx != 0) ) print(FILE, FEM, ADLTx, i, patch, num_traits);
+    if( (MAL != 0) & (ADLTx != 0) ) print(FILE, MAL, ADLTx, i, patch, num_traits);
     
   }
 }
@@ -1234,19 +1227,19 @@ cout << "test" << endl;
 void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p, Patch* patch, unsigned int ntraits)
 {
   Individual* ind;
-cout << "test1" << endl;  
+  
 
   for (unsigned int i = 0; i < patch->size(SEX, AGE); ++i) {
     ind = patch->get(SEX, AGE, i);
-cout << "test2" << endl;    
+    
     FH<<p+1; // prints the patch ID number, add 1 because C++ iterates from 0
-cout << "test3" << endl;    
+    
     for(unsigned int j = 0; j < ntraits; ++j) 
       FH<<" "<<(_FHLinkedEvent->*_FHLinkedEvent->_getRawFitness[j])(ind, p, _FHLinkedEvent->_TraitIndices[j]); // print the fitness value for the trait currently iterated
   }
-cout << "test4" << endl;  
+  
   FH<<" "<<ind->getAge()<< " "<< (p == ind->getHome() ? 0 : 1) <<endl; // print individual's age and migrant status
-cout << "test5" << endl;  
+  
   
 }
 
