@@ -1,10 +1,10 @@
-/**  $Id: LCEselection.cc,v 1.21 2015-04-01 14:25:16 fred Exp $
+/**  $Id: LCEselection.cc,v 1.22 2015-07-13 08:52:57 fred Exp $
 *
 *  @file LCEselection.cc
 *  Nemo2
 *
-*   Copyright (C) 2006-2011 Frederic Guillaume
-*   frederic.guillaume@env.ethz.ch
+*   Copyright (C) 2006-2015 Frederic Guillaume
+*   frederic.guillaume@ieu.uzh.ch
 *
 *   This file is part of Nemo
 *
@@ -44,7 +44,7 @@
 LCE_Selection_base::LCE_Selection_base ( ) : LifeCycleEvent("viability_selection", ""),
 _selection_matrix(0), _gsl_selection_matrix(0), _diffs(0), _res1(0), _local_optima(0), _phe(0),
 _selectTraitDimension(1), _base_fitness(1), _mean_fitness(0), _max_fitness(0), _scaling_factor(1), 
-_is_local(0), _is_absolute(1), _eVariance(0), _getRawFitness(0), _getFitness(0), _stater(0)
+_is_local(0), _is_absolute(1), _eVariance(0), _getRawFitness(0), _getFitness(0), _stater(0),_writer(0)
 { 
   add_parameter("selection_trait",STR,false,false,0,0); //no updaters here, to keep it safe...
   
@@ -74,6 +74,11 @@ _is_local(0), _is_absolute(1), _eVariance(0), _getRawFitness(0), _getFitness(0),
   add_parameter("selection_std_rate_environmental_change", DBL, false, false, 0, 0, updater);
   add_parameter("selection_std_rate_set_at_generation", INT, false, false, 0, 0, updater);
   add_parameter("selection_std_rate_reference_patch", INT, false, false, 0, 0, updater);
+  
+  // add params for ini file to track ind output
+  add_parameter("selection_output", BOOL, false, false, 0, 0, 0);
+  add_parameter("selection_output_logtime", INT, false, false, 0, 0, 0);
+  add_parameter("selection_output_dir", STR, false, false, 0, 0, 0);
 }
 // ----------------------------------------------------------------------------------------
 // LCE_Selection_base::~LCE_Selection_base
@@ -102,6 +107,40 @@ void LCE_Selection_base::loadStatServices ( StatServices* loader )
   if(_stater == NULL) _stater = new LCE_SelectionSH(this);
   loader->attach(_stater);
 }
+// ----------------------------------------------------------------------------------------
+// LCE_Selection_base::loadFileServices
+// ----------------------------------------------------------------------------------------
+void LCE_Selection_base::loadFileServices ( FileServices* loader )
+{
+  if(_paramSet->isSet("selection_output")) {
+  
+    if(_writer == NULL) _writer = new LCE_SelectionFH(this);
+    
+    Param* param = get_parameter("selection_output_logtime");
+    
+    if(param->isMatrix()) {
+      
+      TMatrix temp;
+      
+      param->getMatrix(&temp);
+      
+      _writer->set_multi(true, true, 1, &temp, get_parameter("selection_output_dir")->getArg());
+    //           rpl_per, gen_per, rpl_occ, gen_occ, rank, path, self-ref
+    } else _writer->set(true, param->isSet(), 1, (param->isSet() ? (int)param->getValue() : 0), 0, get_parameter("selection_output_dir")->getArg(), this);
+    
+  
+    loader->attach(_writer);
+  
+  } else {
+    
+    if(_writer) delete _writer;
+    
+    return;
+  }
+    
+  
+}
+
 // ----------------------------------------------------------------------------------------
 // LCE_Selection_base::setParameters
 // ----------------------------------------------------------------------------------------
@@ -639,14 +678,8 @@ double LCE_Selection_base::getFitnessAbsolute (Individual* ind, unsigned int pat
   double fitness = 1;
   //at this point, _getRawFitness.size() == _TraitIndices.size()
   //and we assume that the functions are "aligned" with the traits
-  if((SIMenv::getCurrentGeneration() >= 14900 && SIMenv::getCurrentGeneration() <= 16100) && SIMenv::getCurrentGeneration() % 10 == 0) cout << SIMenv::getCurrentGeneration() << " " << patch << " ";
-  
   for(unsigned int i = 0; i < _getRawFitness.size(); i++)
-  {
     fitness *= (this->*_getRawFitness[i])(ind, patch, _TraitIndices[i]);
-    if((SIMenv::getCurrentGeneration() >= 14900 && SIMenv::getCurrentGeneration() <= 16100) && SIMenv::getCurrentGeneration() % 10 == 0) cout << (this->*_getRawFitness[i])(ind, patch, _TraitIndices[i]) << " ";
-  }
-// DONT NEED FULL FITNESS B/C CAN JUST MULTIPLY TO GET IT  if((SIMenv::getCurrentGeneration() >= 15000 && SIMenv::getCurrentGeneration() <= 16000) && SIMenv::getCurrentGeneration() % 10 == 0) cout << fitness << endl;
   return fitness;
 }
 // ----------------------------------------------------------------------------------------
@@ -1152,3 +1185,62 @@ double LCE_SelectionSH::getVarPatchFitness (unsigned int i, unsigned int int_age
     
   return var/patch_size;
 }
+
+
+// ----------------------------------------------------------------------------------------
+// newly added filehandler for printing ind values of fitness etc out
+// ----------------------------------------------------------------------------------------
+void LCE_SelectionFH::FHwrite()
+{
+  unsigned int num_traits = _FHLinkedEvent->_TraitIndices.size();
+  
+  std::string filename = get_filename();
+  
+  std::ofstream FILE (filename.c_str(), ios::out);
+  
+  if(!FILE) fatal("could not open \"%s\" output file!!\n",filename.c_str());
+
+  FILE<<"pop";
+  
+  for (unsigned int i = 0; i < num_traits; ++i) {
+    FILE<<" trait"<< tstring::int2str(i+1);
+  }
+  
+  FILE<< " age isMigrant"<<endl;
+  
+  
+  Patch* patch;
+  
+  for(unsigned int i = 0; i < _pop->getPatchNbr(); ++i ) {
+    
+    patch = _pop->getPatch(i);
+    
+    
+    print(FILE, FEM, OFFSx, i, patch, num_traits);
+    print(FILE, MAL, OFFSx, i, patch, num_traits);
+    
+    print(FILE, FEM, ADLTx, i, patch, num_traits);
+    print(FILE, MAL, ADLTx, i, patch, num_traits);
+    
+  }
+}
+
+
+void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p, Patch* patch, unsigned int ntraits)
+{
+  Individual* ind;
+  
+  for (unsigned int i = 0; i < patch->size(SEX, AGE); ++i) {
+    ind = patch->get(SEX, AGE, i);
+    
+    FH<<p+1;
+    
+    for(unsigned int j = 0; j < ntraits; ++j) 
+      FH<<" "<<(_FHLinkedEvent->*_FHLinkedEvent->_getRawFitness[j])(ind, p, _FHLinkedEvent->_TraitIndices[j]);
+  }
+  
+  FH<<" "<<ind->getAge()<< " "<< (p == ind->getHome() ? 0 : 1) <<endl;
+  
+  
+}
+

@@ -1,10 +1,10 @@
-/**  $Id: LCEselection.h,v 1.13 2015-04-01 14:15:04 fred Exp $
+/**  $Id: LCEselection.h,v 1.15 2015-07-13 08:52:59 fred Exp $
 *
 *  @file LCEselection.h
 *  Nemo2
 *
-*   Copyright (C) 2006-2011 Frederic Guillaume
-*   frederic.guillaume@env.ethz.ch
+*   Copyright (C) 2006-2015 Frederic Guillaume
+*   frederic.guillaume@ieu.uzh.ch
 *
 *   This file is part of Nemo
 *
@@ -114,16 +114,16 @@ protected:
   ///@{
   /**A vector containing pointers to fitness function related to each trait under selection.*/
   vector< double (LCE_Selection_base::* ) (Individual*, unsigned int, unsigned int) > _getRawFitness;
-
+  
   /**Pointer to the function returning the individual fitness. 
    May point to LCE_Selection_base::getFitnessAbsolute or LCE_Selection_base::getFitnessRelative.*/
   double (LCE_Selection_base::* _getFitness) (Individual*, unsigned int);
-
+  
   /**Pointer to the function used to set the fitness scaling factor when fitness is relative.
    May point to LCE_Selection_base::setScalingFactorGlobal, LCE_Selection_base::setScalingFactorLocal,
    or LCE_Selection_base::setScalingFactorAbsolute (returns 1).*/
   void (LCE_Selection_base::* _setScalingFactor) (age_idx, unsigned int);
-
+  
   /**Pointer to the function used to change the local phenotypic optima or its rate of change.
    May point to LCE_Selection_base::changeLocalOptima or LCE_Selection_base::set_std_rate_of_change.*/
   void (LCE_Selection_base::* _setNewLocalOptima) (void);
@@ -131,7 +131,7 @@ protected:
   
   LCE_SelectionSH* _stater;
   LCE_SelectionFH* _writer;
-   
+    
 public:
     
   LCE_Selection_base ( );
@@ -273,7 +273,7 @@ public:
   virtual bool setParameters ();
   virtual void execute ();
   virtual void loadStatServices (StatServices* loader);
-  virtual void loadFileServices (FileServices* loader) {}
+  virtual void loadFileServices (FileServices* loader);
   virtual LifeCycleEvent* clone () {return new LCE_Selection_base();}
   virtual age_t removeAgeClass   () {return NONE;}
   virtual age_t addAgeClass      () {return NONE;}
