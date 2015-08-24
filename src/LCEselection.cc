@@ -1236,10 +1236,9 @@ cout << "test" << endl;
     
     for(unsigned int j = 0; j < ntraits; ++j) 
       FH << " " << (_FHLinkedEvent->*_FHLinkedEvent->_getRawFitness[j])(ind, p, _FHLinkedEvent->_TraitIndices[j]); // print the fitness value for the trait currently iterated
+  
+      FH << " " << ind->getAge() << " " << (p == ind->getHome() ? 0 : 1) << endl; // print individual's age and migrant status
   }
-  
-  FH << " " << ind->getAge() << " " << (p == ind->getHome() ? 0 : 1) << endl; // print individual's age and migrant status
-  
   
 }
 
