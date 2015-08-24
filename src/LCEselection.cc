@@ -1228,17 +1228,17 @@ void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p
 {
   Individual* ind;
   
-
+cout << "test" << endl;
   for (unsigned int i = 0; i < patch->size(SEX, AGE); ++i) {
     ind = patch->get(SEX, AGE, i);
     
-    FH<<p+1; // prints the patch ID number, add 1 because C++ iterates from 0
+    FH << p+1; // prints the patch ID number, add 1 because C++ iterates from 0
     
     for(unsigned int j = 0; j < ntraits; ++j) 
-      FH<<" "<<(_FHLinkedEvent->*_FHLinkedEvent->_getRawFitness[j])(ind, p, _FHLinkedEvent->_TraitIndices[j]); // print the fitness value for the trait currently iterated
+      FH << " " << (_FHLinkedEvent->*_FHLinkedEvent->_getRawFitness[j])(ind, p, _FHLinkedEvent->_TraitIndices[j]); // print the fitness value for the trait currently iterated
   }
   
-  FH<<" "<<ind->getAge()<< " "<< (p == ind->getHome() ? 0 : 1) <<endl; // print individual's age and migrant status
+  FH << " " << ind->getAge() << " " << (p == ind->getHome() ? 0 : 1) << endl; // print individual's age and migrant status
   
   
 }
