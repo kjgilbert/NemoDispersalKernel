@@ -1206,20 +1206,6 @@ void LCE_SelectionFH::FHwrite()
     FILE<<" trait"<< tstring::int2str(i+1);
   }
 
-// try this next _phe = (double*)ind->getTraitValue(trait);
-//		diff = _phe[0] - _local_optima->get(patch, 0);
-//		//add the environmental variance here:
-//		  diff = _phe[0] + RAND::Gaussian(_eVariance) - _local_optima->get(patch, 0);
-
-
-//   bool print_genotype = (_FHLinkedTrait->get_env_var() != 0);	// if env variance is not 0, then want to print genotype with phenotype
-//   // this doesn't work for mulitple traits if they exist // FILE << " P1";
-//   for(unsigned int k = 0; k < num_traits; k++) {
-//     FILE<<"P"<<k+1<< " ";
-//     if(print_genotype) FILE<<"G"<<k+1<< " ";
-//   }
-    
-
   FILE<< " age isMigrant" << endl;
   
   Patch* patch;
@@ -1261,7 +1247,10 @@ void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p
 
   cout << _FHLinkedEvent->_phe << endl; // this prints a memory address
 double* pheno = _FHLinkedEvent->_phe;
-cout << pheno << endl;
+//cout << pheno << endl;  // prints the same memory address
+//int trait = j;
+cout << "j " << j << endl;
+//cout << (double*)ind->getTraitValue(trait) << endl;
 
        FH << " " << ind->getAge() << " " << (p == ind->getHome() ? 0 : 1) << endl; 					// print individual's age and migrant status
    }
