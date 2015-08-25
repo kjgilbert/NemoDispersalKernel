@@ -1230,11 +1230,6 @@ void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p
 {
   Individual* ind;
   
-
-//cout << _FHLinkedEvent->_phe << endl; // this prints a memory address
-//_phe = (double*)ind->getTraitValue(1);
-//cout << _phe << " phenotype" << endl;
-
   for (unsigned int i = 0; i < patch->size(SEX, AGE); ++i) {								// go through each patch's individuals of a given age and sex class
   
      ind = patch->get(SEX, AGE, i);											// take one individual
@@ -1247,7 +1242,6 @@ void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p
 
          cout << _FHLinkedEvent->_phe << endl; // this prints a memory address
          double* pheno = _FHLinkedEvent->_phe;
-         //cout << pheno << endl;  // prints the same memory address
          cout << (double*)ind->getTraitValue(j) << endl;
          cout << ind->getTraitValue(j) << endl;
 cout << pheno[0] << endl;
