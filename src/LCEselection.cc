@@ -1239,15 +1239,10 @@ void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p
      for(unsigned int j = 0; j < ntraits; ++j){ 										// go through each of its traits
   
          FH << " " << (_FHLinkedEvent->*_FHLinkedEvent->_getRawFitness[j])(ind, p, _FHLinkedEvent->_TraitIndices[j]); 	// print the fitness value for the trait currently iterated
-
-         cout << _FHLinkedEvent->_phe << endl; // this prints a memory address
-         double* pheno = _FHLinkedEvent->_phe;
-         cout << (double*)ind->getTraitValue(j) << endl;
-         cout << ind->getTraitValue(j) << endl;
-cout << pheno[0] << endl;
-//double* test = ind->getTraitValue(j);
-//cout << test[0] << endl;
        }
+
+       double* pheno = _FHLinkedEvent->_phe;
+       cout << pheno[0] << endl;
 
        FH << " " << ind->getAge() << " " << (p == ind->getHome() ? 0 : 1) << endl; 					// print individual's age and migrant status
    }
