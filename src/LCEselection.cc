@@ -1206,7 +1206,7 @@ void LCE_SelectionFH::FHwrite()
     FILE<<" trait"<< tstring::int2str(i+1);
   }
 
-  FILE<< " age isMigrant" << endl;
+  FILE<< " pheno age isMigrant" << endl;
   
   Patch* patch;
 
@@ -1242,9 +1242,9 @@ void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p
        }
 
        double* pheno = _FHLinkedEvent->_phe;
-       cout << pheno[0] << endl;
+       //cout << pheno[0] << endl;
 
-       FH << " " << ind->getAge() << " " << (p == ind->getHome() ? 0 : 1) << endl; 					// print individual's age and migrant status
+       FH << " " << pheno[0] << " "  << ind->getAge() << " " << (p == ind->getHome() ? 0 : 1) << endl; 					// print individual's phenotype, age, and migrant status
    }
   
 }
