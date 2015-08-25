@@ -1211,10 +1211,7 @@ void LCE_SelectionFH::FHwrite()
 //		//add the environmental variance here:
 //		  diff = _phe[0] + RAND::Gaussian(_eVariance) - _local_optima->get(patch, 0);
 
-//_phe = (double*)ind->getTraitValue(i);
-//cout << _phe << " phenotype" << endl;
 
-//   // add code of my own here, trying to print whole genotype value and phenotype value (latter will only work if there is environmental variance)
 //   bool print_genotype = (_FHLinkedTrait->get_env_var() != 0);	// if env variance is not 0, then want to print genotype with phenotype
 //   // this doesn't work for mulitple traits if they exist // FILE << " P1";
 //   for(unsigned int k = 0; k < num_traits; k++) {
@@ -1246,9 +1243,9 @@ void LCE_SelectionFH::FHwrite()
 void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p, Patch* patch, unsigned int ntraits)
 {
   Individual* ind;
-//double* Tval;  
+  
 
-_FHLinkedEvent->_phe;
+cout << _FHLinkedEvent->_phe << endl;
 //_phe = (double*)ind->getTraitValue(1);
 //cout << _phe << " phenotype" << endl;
 
@@ -1262,13 +1259,6 @@ _FHLinkedEvent->_phe;
   
        FH << " " << (_FHLinkedEvent->*_FHLinkedEvent->_getRawFitness[j])(ind, p, _FHLinkedEvent->_TraitIndices[j]); 	// print the fitness value for the trait currently iterated
   
-//       // adding new code here of my own, trying to print geno & pheno
-//       FH.precision(4);
-//       for(unsigned int k = 0; k < (ntraits-1); k++) {	// I think - 1 because this num here is 2 for one quanti and one delet, but the code with this is thinking it's num of quanti traits
-//         FH<<Tval[k]<<" ";
-//         if(print_genotype) FH << trait->get_genotype(k) << " ";	// THIS LINE IS USEFUL
-//       }
-
        FH << " " << ind->getAge() << " " << (p == ind->getHome() ? 0 : 1) << endl; 					// print individual's age and migrant status
    }
   
