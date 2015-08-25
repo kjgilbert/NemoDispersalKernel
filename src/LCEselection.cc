@@ -1206,7 +1206,13 @@ void LCE_SelectionFH::FHwrite()
     FILE<<" trait"<< tstring::int2str(i+1);
   }
 
-// try this next _phe = (double*)ind->getTraitValue(trait)
+// try this next _phe = (double*)ind->getTraitValue(trait);
+//		diff = _phe[0] - _local_optima->get(patch, 0);
+//		//add the environmental variance here:
+//		  diff = _phe[0] + RAND::Gaussian(_eVariance) - _local_optima->get(patch, 0);
+
+//_phe = (double*)ind->getTraitValue(i);
+//cout << _phe << " phenotype" << endl;
 
 //   // add code of my own here, trying to print whole genotype value and phenotype value (latter will only work if there is environmental variance)
 //   bool print_genotype = (_FHLinkedTrait->get_env_var() != 0);	// if env variance is not 0, then want to print genotype with phenotype
@@ -1241,6 +1247,9 @@ void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p
 {
   Individual* ind;
 //double* Tval;  
+
+_phe = (double*)ind->getTraitValue(1);
+//cout << _phe << " phenotype" << endl;
 
   for (unsigned int i = 0; i < patch->size(SEX, AGE); ++i) {
   
