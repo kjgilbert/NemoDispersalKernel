@@ -1248,7 +1248,8 @@ void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p
   Individual* ind;
 //double* Tval;  
 
-_phe = (double*)ind->getTraitValue(1);
+_FHLinkedEvent->_phe;
+//_phe = (double*)ind->getTraitValue(1);
 //cout << _phe << " phenotype" << endl;
 
   for (unsigned int i = 0; i < patch->size(SEX, AGE); ++i) {
