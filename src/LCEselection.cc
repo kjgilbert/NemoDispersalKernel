@@ -1245,20 +1245,24 @@ void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p
   Individual* ind;
   
 
-cout << _FHLinkedEvent->_phe << endl;
+//cout << _FHLinkedEvent->_phe << endl; // this prints a memory address
 //_phe = (double*)ind->getTraitValue(1);
 //cout << _phe << " phenotype" << endl;
 
-  for (unsigned int i = 0; i < patch->size(SEX, AGE); ++i) {
+  for (unsigned int i = 0; i < patch->size(SEX, AGE); ++i) {								// go through each patch's individuals of a given age and sex class
   
-     ind = patch->get(SEX, AGE, i);
+     ind = patch->get(SEX, AGE, i);											// take one individual
     
      FH << p+1; 													// prints the patch ID number, add 1 because C++ iterates from 0
     
-     for(unsigned int j = 0; j < ntraits; ++j) 
+     for(unsigned int j = 0; j < ntraits; ++j) 										// go through each of its traits
   
        FH << " " << (_FHLinkedEvent->*_FHLinkedEvent->_getRawFitness[j])(ind, p, _FHLinkedEvent->_TraitIndices[j]); 	// print the fitness value for the trait currently iterated
-  
+
+  cout << _FHLinkedEvent->_phe << endl; // this prints a memory address
+double* pheno = _FHLinkedEvent->_phe;
+cout << pheno << endl;
+
        FH << " " << ind->getAge() << " " << (p == ind->getHome() ? 0 : 1) << endl; 					// print individual's age and migrant status
    }
   
