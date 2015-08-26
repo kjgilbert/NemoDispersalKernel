@@ -1239,10 +1239,6 @@ void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p
      for(unsigned int j = 0; j < ntraits; ++j){ 										// go through each of its traits  
          FH.precision(3);            	// three total digits in output
          FH << " " << (_FHLinkedEvent->*_FHLinkedEvent->_getRawFitness[j])(ind, p, _FHLinkedEvent->_TraitIndices[j]); 	// print the fitness value for the trait currently iterated
-
- FH << " " << ((double*)ind->getTraitValue(j))[0];
-//cout << ind->getTraitValue(j) << endl;
-//cout << ((double*)ind->getTraitValue(j))[0] << endl;
      }
 
      double* pheno = _FHLinkedEvent->_phe;
