@@ -1206,7 +1206,7 @@ void LCE_SelectionFH::FHwrite()
     FILE<<" fitness_trait_"<< tstring::int2str(i+1);
   }
 
-  FILE<< " pheno geno?" << endl;	// don't need age or is migrant in current setup with many patches // age isMigrant" << endl;
+  FILE<< " pheno" << endl;	// don't need age or is migrant in current setup with many patches // age isMigrant" << endl;
   
   Patch* patch;
 
