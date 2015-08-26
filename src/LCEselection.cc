@@ -1203,7 +1203,7 @@ void LCE_SelectionFH::FHwrite()
   FILE<<"pop";
   
   for (unsigned int i = 0; i < num_traits; ++i) {
-    FILE<<" trait"<< tstring::int2str(i+1);
+    FILE<<" fitness_trait_"<< tstring::int2str(i+1);
   }
 
   FILE<< " pheno" << endl;	// don't need age or is migrant in current setup with many patches // age isMigrant" << endl;
