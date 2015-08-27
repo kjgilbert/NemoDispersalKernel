@@ -1245,8 +1245,15 @@ void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p
          FH << " " << (_FHLinkedEvent->*_FHLinkedEvent->_getRawFitness[j])(ind, p, _FHLinkedEvent->_TraitIndices[j]); 	// print the fitness value for the trait currently iterated
          FH.precision(4);                   // four total digits in output
          FH << " " << ((double*)ind->getTraitValue(j))[0];
-         FH << " "<< dynamic_cast<TTQuanti*> (ind->getTrait(j))->get_genotype(0);
+         
+cout << (ind->getTrait(j)) << endl;
+cout << dynamic_cast<TTQuanti*> (ind->getTrait(j)) << endl;
+//cout << dynamic_cast<TTQuanti*> (ind->getTrait(j))->get_genotype(0) << endl;
+
+//FH << " "<< dynamic_cast<TTQuanti*> (ind->getTrait(j))->get_genotype(0);
      }
+
+     FH << endl;
 
 // don't want with current setup of many patches //" "  << ind->getAge() << " " << (p == ind->getHome() ? 0 : 1) << endl; 	// print individual's age and migrant status
 
