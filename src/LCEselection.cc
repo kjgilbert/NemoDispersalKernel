@@ -1207,9 +1207,10 @@ void LCE_SelectionFH::FHwrite()
     FILE<<" fitness_trait_"<< tstring::int2str(i+1);
   }
 
-  for (unsigned int i = 0; i < num_traits; ++i) {
-    FILE<< " pheno_" << tstring::int2str(i+1);	// don't need age or is migrant in current setup with many patches // age isMigrant" << endl;
-  }
+// uncomment this and remove " pheno" from the next FH line if I want to print both delet and quanti phenos. currently don't want to do this
+//  for (unsigned int i = 0; i < num_traits; ++i) {
+//    FILE<< " pheno_" << tstring::int2str(i+1);	// don't need age or is migrant in current setup with many patches // age isMigrant" << endl;
+//  }
 
   FILE << " pheno geno" << endl;
 
