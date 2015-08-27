@@ -1250,11 +1250,11 @@ void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p
 	// print the genotype values for the quanti trait:
 
      FH.precision(4);               		// four total digits in output
-     
-     if(ntraits < 1 || ntraits > 2){		// have either 1 jsut quanti or 1 just delet trait, or multiple quanti, or delet AND multiple quanti
+
+     if(ntraits < 2 || ntraits > 2){		// have either 1 just quanti or 1 just delet trait, or multiple quanti, or delet AND multiple quanti
         cout << "If deleterious traits are being used, this code will not work. Edit LCEselection.cc filehandler final lines to print the correct genotypic value." << endl;
-        FH << " " << ((double*)ind->getTraitValue(0))[0];
-        FH << " "<< dynamic_cast<TTQuanti*> (ind->getTrait(0))->get_genotype(0);
+        FH << " " << ((double*)ind->getTraitValue(1))[0];
+        FH << " "<< dynamic_cast<TTQuanti*> (ind->getTrait(1))->get_genotype(0);
      }
 
      if(ntraits == 2){
