@@ -1210,7 +1210,7 @@ void LCE_SelectionFH::FHwrite()
     FILE<< " pheno_" << tstring::int2str(i+1);	// don't need age or is migrant in current setup with many patches // age isMigrant" << endl;
   }
 
-  FILE << endl;
+  FILE << " geno" << endl;
 
   Patch* patch;
 
@@ -1240,20 +1240,15 @@ void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p
     
      FH << p+1; 													// prints the patch ID number, add 1 because C++ iterates from 0
     
-     for(unsigned int j = 0; j < ntraits; ++j){ 										// go through each of its traits  
+     for(unsigned int j = 0; j < ntraits; ++j){ 									// go through each of its traits  
          FH.precision(3);            	// three total digits in output
          FH << " " << (_FHLinkedEvent->*_FHLinkedEvent->_getRawFitness[j])(ind, p, _FHLinkedEvent->_TraitIndices[j]); 	// print the fitness value for the trait currently iterated
          FH.precision(4);                   // four total digits in output
          FH << " " << ((double*)ind->getTraitValue(j))[0];
+         FH << " "<< dynamic_cast<TTQuanti*> (ind->getTrait(j))->get_genotype(0);
      }
 
-     FH << endl;
-
-     //double* pheno = _FHLinkedEvent->_phe;
-
-     FH.precision(4); 			// four total digits in output
-     //FH << " " << pheno[0] << endl; 	// don't need age or is migrant in current setup with many patches //" "  << ind->getAge() << " " << (p == ind->getHome() ? 0 : 1) << endl; 					// print individual's phenotype, age, and migrant status
-     //FH << " " << ((double*)ind->getTraitValue(j))[0] << endl;
+// don't want with current setup of many patches //" "  << ind->getAge() << " " << (p == ind->getHome() ? 0 : 1) << endl; 	// print individual's age and migrant status
 
    }  
 }
