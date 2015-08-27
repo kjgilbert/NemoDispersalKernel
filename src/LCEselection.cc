@@ -1241,10 +1241,11 @@ void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p
          FH << " " << (_FHLinkedEvent->*_FHLinkedEvent->_getRawFitness[j])(ind, p, _FHLinkedEvent->_TraitIndices[j]); 	// print the fitness value for the trait currently iterated
      }
 
-     double* pheno = _FHLinkedEvent->_phe;
+     //double* pheno = _FHLinkedEvent->_phe;
 
      FH.precision(4); 			// four total digits in output
-     FH << " " << pheno[0] << endl; 	// don't need age or is migrant in current setup with many patches //" "  << ind->getAge() << " " << (p == ind->getHome() ? 0 : 1) << endl; 					// print individual's phenotype, age, and migrant status
+     //FH << " " << pheno[0] << endl; 	// don't need age or is migrant in current setup with many patches //" "  << ind->getAge() << " " << (p == ind->getHome() ? 0 : 1) << endl; 					// print individual's phenotype, age, and migrant status
+     FH << " " << ((double*)ind->getTraitValue(j))[0] << endl;
 
    }  
 }
