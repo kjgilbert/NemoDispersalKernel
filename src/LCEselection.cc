@@ -33,6 +33,7 @@
 #include "utils.h"
 #include "tstring.h"
 #include "simenv.h"
+#include "ttquanti.h"
 
 // ------------------------------------------------------------------------------
 
@@ -1210,7 +1211,7 @@ void LCE_SelectionFH::FHwrite()
     FILE<< " pheno_" << tstring::int2str(i+1);	// don't need age or is migrant in current setup with many patches // age isMigrant" << endl;
   }
 
-  FILE << " geno" << endl;
+  FILE << " pheno geno" << endl;
 
   Patch* patch;
 
@@ -1243,19 +1244,22 @@ void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p
      for(unsigned int j = 0; j < ntraits; ++j){ 									// go through each of its traits  
          FH.precision(3);            	// three total digits in output
          FH << " " << (_FHLinkedEvent->*_FHLinkedEvent->_getRawFitness[j])(ind, p, _FHLinkedEvent->_TraitIndices[j]); 	// print the fitness value for the trait currently iterated
-         FH.precision(4);                   // four total digits in output
-         FH << " " << ((double*)ind->getTraitValue(j))[0];
-         
-cout << (ind->getTrait(j)) << endl;
-cout << dynamic_cast<TTQuanti*> (ind->getTrait(j)) << endl;
-//cout << dynamic_cast<TTQuanti*> (ind->getTrait(j))->get_genotype(0) << endl;
-
-//FH << " "<< dynamic_cast<TTQuanti*> (ind->getTrait(j))->get_genotype(0);
      }
 
-     FH << endl;
+	// print the genotype values for the quanti trait:
 
-// don't want with current setup of many patches //" "  << ind->getAge() << " " << (p == ind->getHome() ? 0 : 1) << endl; 	// print individual's age and migrant status
+     FH.precision(4);               		// four total digits in output
+     
+     if(ntraits < 1 || ntraits > 2){		// have either 1 jsut quanti or 1 just delet trait, or multiple quanti, or delet AND multiple quanti
+        cout << "If deleterious traits are being used, this code will not work. Edit LCEselection.cc filehandler final lines to print the correct genotypic value." << endl;
+        FH << " " << ((double*)ind->getTraitValue(0))[0];
+        FH << " "<< dynamic_cast<TTQuanti*> (ind->getTrait(0))->get_genotype(0);
+     }
+
+     if(ntraits == 2){
+        FH << " " << ((double*)ind->getTraitValue(1))[0];
+        FH << " "<< dynamic_cast<TTQuanti*> (ind->getTrait(1))->get_genotype(0) << endl;
+     }			// don't want with current setup of many patches //" "  << ind->getAge() << " " << (p == ind->getHome() ? 0 : 1) << endl; 	// print individual's age and migrant status
 
    }  
 }
