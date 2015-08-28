@@ -1215,18 +1215,18 @@ void LCE_SelectionFH::FHwrite()
   FILE << " pheno geno" << endl;
 
   Patch* patch;
-int index = _pop->getTraitIndex("quant");
+  int index = _pop->getTraitIndex("quant");
 cout << "index1 " << index << endl;
 
   for(unsigned int i = 0; i < _pop->getPatchNbr(); ++i ) {
     
     patch = _pop->getPatch(i);
 
-    if( patch->size(FEM, OFFSx) != 0 ) print(FILE, FEM, OFFSx, i, patch, num_traits);
-    if( patch->size(MAL, OFFSx) != 0 ) print(FILE, MAL, OFFSx, i, patch, num_traits);
+    if( patch->size(FEM, OFFSx) != 0 ) print(FILE, FEM, OFFSx, i, patch, num_traits, index);
+    if( patch->size(MAL, OFFSx) != 0 ) print(FILE, MAL, OFFSx, i, patch, num_traits, index);
     
-    if( patch->size(FEM, ADLTx) != 0 ) print(FILE, FEM, ADLTx, i, patch, num_traits);
-    if( patch->size(MAL, ADLTx) != 0 ) print(FILE, MAL, ADLTx, i, patch, num_traits);
+    if( patch->size(FEM, ADLTx) != 0 ) print(FILE, FEM, ADLTx, i, patch, num_traits, index);
+    if( patch->size(MAL, ADLTx) != 0 ) print(FILE, MAL, ADLTx, i, patch, num_traits, index);
     
   }
 
@@ -1234,12 +1234,9 @@ cout << "index1 " << index << endl;
 }
 
 
-void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p, Patch* patch, unsigned int ntraits)
+void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p, Patch* patch, unsigned int ntraits, int index)
 {
   Individual* ind;
-  
-int index = _pop->getTraitIndex("quant");
-cout << "index2 " << index << endl;
 
   for (unsigned int i = 0; i < patch->size(SEX, AGE); ++i) {								// go through each patch's individuals of a given age and sex class
   

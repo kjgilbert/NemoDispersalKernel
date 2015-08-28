@@ -329,7 +329,7 @@ class LCE_SelectionFH : public virtual EventFileHandler< LCE_Selection_base >
   
   virtual void FHread(string& filename) {}
   
-  void print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int i, Patch* patch, unsigned int ntraits);
+  void print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int i, Patch* patch, unsigned int ntraits, int index);
 };
 
 
