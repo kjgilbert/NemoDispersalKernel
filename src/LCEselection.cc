@@ -1216,7 +1216,6 @@ void LCE_SelectionFH::FHwrite()
 
   Patch* patch;
   int index = _pop->getTraitIndex("quant");
-cout << "index1 " << index << endl;
 
   for(unsigned int i = 0; i < _pop->getPatchNbr(); ++i ) {
     
@@ -1250,13 +1249,11 @@ void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p
      }
 
 	// print the phenotype and  genotype values for only the quanti trait:
-
      FH.precision(4);               		// four total digits in output
      FH << " " << ((double*)ind->getTraitValue(index))[0];
      FH << " " << dynamic_cast<TTQuanti*> (ind->getTrait(index))->get_genotype(0) << endl;
 
 			// don't want with current setup of many patches //" "  << ind->getAge() << " " << (p == ind->getHome() ? 0 : 1) << endl; 	// print individual's age and migrant status
-
    }  
 }
 
