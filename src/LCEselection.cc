@@ -1215,6 +1215,8 @@ void LCE_SelectionFH::FHwrite()
   FILE << " pheno geno" << endl;
 
   Patch* patch;
+int index = _pop->getTraitIndex("quant");
+cout << "index1 " << index << endl;
 
   for(unsigned int i = 0; i < _pop->getPatchNbr(); ++i ) {
     
@@ -1236,6 +1238,9 @@ void LCE_SelectionFH::print(ofstream& FH, sex_t SEX, age_idx AGE, unsigned int p
 {
   Individual* ind;
   
+int index = _pop->getTraitIndex("quant");
+cout << "index2 " << index << endl;
+
   for (unsigned int i = 0; i < patch->size(SEX, AGE); ++i) {								// go through each patch's individuals of a given age and sex class
   
      ind = patch->get(SEX, AGE, i);											// take one individual
