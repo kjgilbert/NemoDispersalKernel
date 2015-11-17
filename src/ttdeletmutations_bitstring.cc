@@ -224,16 +224,22 @@ void TProtoDeletMutations_bitstring::set_effects()
   for(unsigned int i = 0; i < _nb_locus; ++i){		// go through each locus and set its effects
     
     double lowTruncation_mutEffectSize = (get_parameter_value("delet_mutation_rate")/10);
-    
-    do{
-      _effects[1][i] = (float)(this->*_set_effects_func)(); //homozygote effect: s
-    }while(_effects[1][i] > 1); //remove truncation of distribution
 
-    if(_dominance_model == 1)
-      dom = exp(-1.0*_effects[1][i]*k)/2.0; //scaling of h on s
-    else dom = _dominance;
+    if(RAND::Uniform()>0.03) {   // add recessive lethals at 3%
+      _effects[1][i] = 1;
+      _effects[0][i] = 0;
+    } else {
     
-    _effects[0][i] = (float)(dom * _effects[1][i]); //heterozygote effect: hs		// doesn't need modifying because it just depends on the homozygote effect which is set above
+        do{
+          _effects[1][i] = (float)(this->*_set_effects_func)(); //homozygote effect: s
+        }while(_effects[1][i] > 1); //remove truncation of distribution
+
+        if(_dominance_model == 1)
+          dom = exp(-1.0*_effects[1][i]*k)/2.0; //scaling of h on s
+        else dom = _dominance;
+ 
+        _effects[0][i] = (float)(dom * _effects[1][i]); //heterozygote effect: hs		// doesn't need modifying because it just depends on the homozygote effect which is set above
+    } // end if for recessive lethals
   }
   //set the TTDeletMutations global var:
   TTDeletMutations_bitstring::set_effects(_effects);
