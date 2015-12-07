@@ -225,7 +225,7 @@ void TProtoDeletMutations_bitstring::set_effects()
     
     double lowTruncation_mutEffectSize = (get_parameter_value("delet_mutation_rate")/10);
 
-    if(RAND::Uniform()>0.03) {   // add recessive lethals at 3%
+    if(RAND::Uniform()<0.03) {   // add recessive lethals at 3%
       _effects[1][i] = 1;
       _effects[0][i] = 0;
     } else {

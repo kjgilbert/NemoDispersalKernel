@@ -30,4 +30,4 @@ Four new parameters in the .init file allow for use of a breeding window and rel
 
 #### Deleterious Mutations
 
-(As of 24 April 2015, this is not in the current file version, see history to retrieve code where this was implemented.) One small modification has been made to the gamma distribution for deleterious mutations, where 3% of the time, a mutation is lethal. Do not include this version of ttdeletmutations_bitstring.cc if you would not like this condition to be imposed.
+One small modification has been made to the gamma distribution for deleterious mutations, where 3% of the time, a mutation is lethal. Do not include this version of ttdeletmutations_bitstring.cc if you would not like this condition to be imposed.
